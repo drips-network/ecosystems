@@ -1,0 +1,37 @@
+{
+  "name": "ecosystems-api",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "gts lint",
+    "clean": "gts clean",
+    "compile": "tsc",
+    "fix": "gts fix",
+    "prepare": "npm run compile",
+    "pretest": "npm run compile",
+    "posttest": "npm run lint",
+    "dev": "ts-node src/index.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "dotenv-expand": "^12.0.1",
+    "express": "^4.21.2",
+    "pg": "^8.13.1",
+    "typeorm": "^0.3.20",
+    "winston": "^3.17.0",
+    "xstate": "^5.19.2",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.10.5",
+    "gts": "^6.0.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.3"
+  }
+}
