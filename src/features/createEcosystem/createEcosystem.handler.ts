@@ -1,50 +1,31 @@
-import {Repository} from 'typeorm';
-import {Ecosystem} from '../../db/entities.ts/Ecosystem';
-import {
-  CreateNewEcosystemRequestDto,
-  CreateNewEcosystemResponseDto,
-} from './createEcosystem.dto';
-import {transitionEcosystemState} from '../../stateMachine/transitionEcosystemState';
-import {Logger} from 'winston';
+import {randomUUID, UUID} from 'crypto';
+import {NewEcosystemRequestDto} from './createEcosystem.dto';
+import {createEcosystemQueue} from './infrastructure/queue/createEcosystemQueue';
+import {enqueueProjectVerificationJobs} from './infrastructure/queue/enqueueProjectVerificationJobs';
+import {startQueueProcessing} from './infrastructure/queue/startQueueProcessing';
+import {saveEcosystemIfNotExist} from './infrastructure/database/saveEcosystemIfNotExist';
+import {validateEcosystemGraph} from './application/validateEcosystemGraph';
 
 export const handleCreateEcosystem = async (
-  newEcosystemDto: CreateNewEcosystemRequestDto,
-  repository: Repository<Ecosystem>,
-  logger: Logger,
-): Promise<CreateNewEcosystemResponseDto> => {
-  const ecosystemEntityToSave = repository.create({
-    ...newEcosystemDto,
-    state: 'processing_upload', // Initial state
-  });
-  const createdEcosystemEntity = await repository.save(ecosystemEntityToSave);
+  request: NewEcosystemRequestDto,
+): Promise<UUID> => {
+  const ecosystemId = randomUUID();
+  const {chainId, graph} = request;
 
-  try {
-    await verifyProjectsOnGh(newEcosystemDto.graph);
+  validateEcosystemGraph(graph);
 
-    // Transition to `pending_deployment` state
-    await transitionEcosystemState(
-      createdEcosystemEntity,
-      'UPLOAD_SUCCESS',
-      repository,
-    );
-  } catch (error) {
-    logger.error('Failed to verify projects on GitHub for ecosystem: ', error);
+  const queue = createEcosystemQueue(chainId, ecosystemId);
 
-    // Transition to `error` state
-    await transitionEcosystemState(
-      createdEcosystemEntity,
-      'UPLOAD_FAILURE',
-      repository,
-    );
+  const jobsCount = await enqueueProjectVerificationJobs(
+    chainId,
+    ecosystemId,
+    queue,
+    graph,
+  );
 
-    throw new Error('Failed to create ecosystem.');
-  }
+  await saveEcosystemIfNotExist(ecosystemId, request);
 
-  return {id: createdEcosystemEntity.id, state: createdEcosystemEntity.state};
-};
+  void startQueueProcessing(queue, jobsCount);
 
-const verifyProjectsOnGh = async (
-  graph: CreateNewEcosystemRequestDto['graph'],
-) => {
-  console.log('Checking projects on GitHub');
+  return ecosystemId;
 };

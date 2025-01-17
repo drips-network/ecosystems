@@ -1,31 +1,49 @@
-import {UUID} from 'crypto';
 import {z} from 'zod';
-import {EcosystemState} from '../../db/entities.ts/Ecosystem';
+import {ChainId, SUPPORTED_CHAIN_IDS} from '../../domain/types';
 
-export const NewEcosystemPayloadSchema = z.object({
-  name: z.string().min(1).max(100),
-  graph: z
-    .array(
-      z.object({
-        project: z.string().min(1).max(200),
-        distribution: z
-          .array(
-            z.object({
-              to: z.string().min(1).max(200),
-              weight: z.number().min(0).max(100),
-            }),
-          )
-          .nonempty(),
-      }),
-    )
-    .nonempty(),
+const metadataSchema = z.object({
+  icon: z.string(),
+  title: z.string(),
+  text: z.string().optional(),
+  link: z.object({
+    href: z.string(),
+    label: z.string(),
+  }),
 });
 
-export type CreateNewEcosystemRequestDto = z.infer<
-  typeof NewEcosystemPayloadSchema
->;
+// A string in the format 'owner/repo' or 'root'.
+const nodeNameSchema = z
+  .string()
+  .regex(
+    /^[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+$/,
+    "Expected format is 'owner/repo' or 'root'",
+  )
+  .or(z.literal('root'));
 
-export type CreateNewEcosystemResponseDto = {
-  id: UUID;
-  state: EcosystemState;
-};
+const nodeSchema = z.object({
+  projectName: nodeNameSchema,
+});
+
+const edgeSchema = z.object({
+  source: nodeNameSchema,
+  target: nodeNameSchema,
+  weight: z.number().positive(),
+});
+
+const graphSchema = z.object({
+  nodes: z.array(nodeSchema),
+  edges: z.array(edgeSchema),
+});
+
+export const newEcosystemRequestSchema = z.object({
+  graph: graphSchema,
+  metadata: metadataSchema,
+  ownerAccountId: z.string(),
+  name: z.string().min(1).max(100),
+  chainId: z.enum(Object.values(SUPPORTED_CHAIN_IDS) as [ChainId]),
+});
+
+export type NodeDto = z.infer<typeof nodeSchema>;
+export type EdgeDto = z.infer<typeof edgeSchema>;
+export type GraphDto = z.infer<typeof graphSchema>;
+export type NewEcosystemRequestDto = z.infer<typeof newEcosystemRequestSchema>;
