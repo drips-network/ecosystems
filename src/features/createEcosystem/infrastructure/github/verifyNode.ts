@@ -1,53 +1,47 @@
-import {
-  ProjectVerificationJobData,
-  RateLimitInfo,
-} from '../queue/createEcosystemQueue';
+import {RateLimitInfo} from '../queue/createEcosystemQueue';
 import {logger} from '../../../../infrastructure/logger';
 import {getRepoDriverId} from '../repoDriver/getRepoDriverId';
-import gitHub from '../../../../infrastructure/gitHub';
-import {NodeName, ProjectName} from '../../../../domain/types';
+import {ChainId, NodeName, ProjectName} from '../../../../domain/types';
+import {gitHub} from '../../../../infrastructure/gitHub';
 
-export type SuccessfulVerificationResult = {
+export type SuccessfulNodeVerificationResult = {
   success: true;
   repoDriverId: string | null; // `null` for the root node.
   verifiedProjectName: NodeName;
   originalProjectName: NodeName;
 };
 
-export type FailedVerificationResult = {
+export type FailedNodeVerificationResult = {
   success: false;
   error: string;
   failedProjectName: ProjectName;
 };
 
-export type VerificationResult = {
-  rateLimit?: RateLimitInfo;
-} & (SuccessfulVerificationResult | FailedVerificationResult);
+export type NodeVerificationResult =
+  | SuccessfulNodeVerificationResult
+  | FailedNodeVerificationResult;
 
 export const verifyNode = async (
-  jobData: ProjectVerificationJobData,
-): Promise<VerificationResult> => {
-  const {
-    node: {projectName},
-    chainId,
-  } = jobData;
-
+  name: NodeName,
+  chainId: ChainId,
+): Promise<NodeVerificationResult> => {
   // Skip verification for the root node.
-  if (projectName === 'root') {
+  if (name === 'root') {
     return {
       success: true,
+      repoDriverId: null,
       verifiedProjectName: 'root',
       originalProjectName: 'root',
-      repoDriverId: null,
     };
   }
 
   let latestRateLimit: RateLimitInfo | undefined;
-
-  const [expectedOwner, expectedRepo] = projectName.split('/');
+  const [expectedOwner, expectedRepo] = name.split('/');
 
   try {
-    const {data, headers} = await gitHub.repos.get({
+    const {data, headers} = await (
+      await gitHub()
+    ).repos.get({
       owner: expectedOwner,
       repo: expectedRepo,
     });
@@ -69,24 +63,26 @@ export const verifyNode = async (
 
     const verifiedName = `${actualOwner}/${actualRepo}` as ProjectName;
 
+    if (name.toLowerCase() !== verifiedName.toLowerCase()) {
+      throw new Error(`Project '${name}' was renamed to '${verifiedName}'.`);
+    }
+
     return {
       success: true,
+      originalProjectName: name,
       verifiedProjectName: verifiedName,
-      originalProjectName: projectName as ProjectName,
-      rateLimit: latestRateLimit,
       repoDriverId: await getRepoDriverId(chainId, verifiedName),
     };
   } catch (error) {
-    logger.error(`Error verifying project '${projectName}':`, error);
+    logger.error(`Error verifying project '${name}':`, error);
 
     return {
       success: false,
-      failedProjectName: projectName as ProjectName,
-      rateLimit: latestRateLimit,
+      failedProjectName: name,
       error:
         error instanceof Error
           ? error.message
-          : `Unknown error while verifying project '${projectName}'.`,
+          : `Error verifying project '${name}'.`,
     };
   }
 };

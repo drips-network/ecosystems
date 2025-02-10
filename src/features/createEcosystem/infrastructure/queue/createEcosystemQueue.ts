@@ -1,9 +1,8 @@
 import BeeQueue from 'bee-queue';
 import {UUID} from 'crypto';
 import {ChainId} from '../../../../domain/types';
-import {VerificationResult} from '../github/verifyNode';
 import {EdgeDto, NodeDto} from '../../createEcosystem.dto';
-import {queueId} from '../../application/queueId';
+import {buildQueueId} from '../redis/keys';
 import {config} from '../../../../infrastructure/config/configLoader';
 
 export type RateLimitInfo = {
@@ -17,7 +16,7 @@ export type ProjectVerificationJobData = {
   edges: EdgeDto[];
   chainId: ChainId;
   ecosystemId: UUID;
-  verificationResult?: VerificationResult;
+  totalJobs: number;
 };
 
 export type EcosystemQueue = BeeQueue<ProjectVerificationJobData> & {
@@ -26,7 +25,7 @@ export type EcosystemQueue = BeeQueue<ProjectVerificationJobData> & {
 
 export const createEcosystemQueue = (chainId: ChainId, ecosystemId: UUID) => {
   return new BeeQueue<ProjectVerificationJobData>(
-    queueId(ecosystemId, chainId),
+    buildQueueId(ecosystemId, chainId),
     {
       isWorker: true,
       activateDelayedJobs: true,

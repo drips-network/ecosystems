@@ -35,7 +35,7 @@ export class Edge {
   public ecosystem!: Ecosystem;
 
   @Column({type: 'decimal'})
-  public weight!: number;
+  public weight!: number; // Relative to source. Not absolute for the entire ecosystem.
 
   @CreateDateColumn({name: 'createdAt'})
   public createdAt!: Date;

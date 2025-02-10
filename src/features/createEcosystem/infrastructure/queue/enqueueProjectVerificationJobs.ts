@@ -19,6 +19,7 @@ export const enqueueProjectVerificationJobs = async (
       node,
       chainId,
       ecosystemId,
+      totalJobs: nodes.length,
       edges: edges.filter(
         edge =>
           edge.source === node.projectName || edge.target === node.projectName,
@@ -36,6 +37,4 @@ export const enqueueProjectVerificationJobs = async (
   );
 
   await queue.saveAll(jobs);
-
-  return jobs.length;
 };

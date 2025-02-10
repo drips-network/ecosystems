@@ -1,23 +1,27 @@
 import {z} from 'zod';
+import {ECOSYSTEM_STATES} from '../../infrastructure/stateMachine/ecosystemStateMachine';
 
 export const getEcosystemByIdRequestSchema = z.object({
   id: z.string().uuid(),
 });
 
-const metadataSchema = z.object({
-  icon: z.string(),
-  title: z.string(),
-  text: z.string().optional(),
-  link: z.object({
-    href: z.string(),
-    label: z.string(),
+const metadataSchema = z.array(
+  z.object({
+    icon: z.string(),
+    title: z.string(),
+    text: z.string().optional(),
+    link: z.object({
+      href: z.string(),
+      label: z.string(),
+    }),
   }),
-});
+);
 
 const nodeSchema = z.object({
   projectAccountId: z.string().nullable(), // Account ID
   repoOwner: z.string(),
   repoName: z.string(),
+  absoluteWeight: z.number().positive(),
 });
 
 const numericStringOrRootSchema = z.union([
@@ -38,7 +42,8 @@ const graphSchema = z.object({
 
 const getEcosystemByIdResponseSchema = z.object({
   id: z.string(),
-  ownerAccountId: z.string(),
+  state: z.enum(ECOSYSTEM_STATES),
+  accountId: z.string().nullable(),
   name: z.string(),
   description: z.string().nullable().optional(),
   metadata: metadataSchema,

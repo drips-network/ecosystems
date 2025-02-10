@@ -22,7 +22,6 @@ export const handleGetEcosystemById = async (
     throw new NotFoundError(`Ecosystem with ID '${request.id}' not found.`);
   }
 
-  // Fetch edges separately
   const edges = await dataSource
     .getRepository(Edge)
     .createQueryBuilder('edge')
@@ -36,24 +35,25 @@ export const handleGetEcosystemById = async (
     )
     .getMany();
 
-  // Convert to response
   return {
     id: ecosystem.id,
-    ownerAccountId: ecosystem.ownerAccountId,
+    state: ecosystem.state,
+    accountId: ecosystem.accountId,
     name: ecosystem.name,
     description: ecosystem.description,
     metadata: ecosystem.metadata as GetEcosystemByIdResponseDto['metadata'],
     graph: {
       nodes: ecosystem.nodes.map(node => ({
-        projectAccountId: node.repoDriverId,
+        projectAccountId: node.projectAccountId,
+        absoluteWeight: node.absoluteWeight,
         repoOwner:
           node.projectName === 'root' ? 'root' : node.projectName.split('/')[0],
         repoName:
           node.projectName === 'root' ? 'root' : node.projectName.split('/')[1],
       })),
       edges: edges.map(edge => ({
-        source: edge.sourceNode.repoDriverId,
-        target: edge.targetNode.repoDriverId,
+        source: edge.sourceNode.projectAccountId,
+        target: edge.targetNode.projectAccountId,
         weight: edge.weight,
       })),
     },

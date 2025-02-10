@@ -1,7 +1,7 @@
 import {ValidationError} from '../../../application/HttpError';
 import {GraphDto} from '../createEcosystem.dto';
 
-export const checkRootNodeExists = (graph: GraphDto): string[] => {
+const checkRootNodeExists = (graph: GraphDto): string[] => {
   const {nodes} = graph;
   const errors: string[] = [];
 
@@ -15,7 +15,7 @@ export const checkRootNodeExists = (graph: GraphDto): string[] => {
   return errors;
 };
 
-export const checkTotalRootsWeight = (graph: GraphDto): string[] => {
+const checkTotalRootsWeight = (graph: GraphDto): string[] => {
   const {edges} = graph;
   const errors: string[] = [];
 
@@ -31,7 +31,7 @@ export const checkTotalRootsWeight = (graph: GraphDto): string[] => {
   return errors;
 };
 
-export const checkDisconnectedNodes = (graph: GraphDto): string[] => {
+const checkDisconnectedNodes = (graph: GraphDto): string[] => {
   const {nodes, edges} = graph;
   const errors: string[] = [];
 
@@ -52,7 +52,7 @@ export const checkDisconnectedNodes = (graph: GraphDto): string[] => {
   return errors;
 };
 
-export const checkForCycles = (graph: GraphDto): string[] => {
+const checkForCycles = (graph: GraphDto): string[] => {
   const {nodes, edges} = graph;
   const errors: string[] = [];
 
@@ -90,7 +90,7 @@ export const checkForCycles = (graph: GraphDto): string[] => {
   return errors;
 };
 
-export const checkInvalidRootEdges = (graph: GraphDto): string[] => {
+const checkInvalidRootEdges = (graph: GraphDto): string[] => {
   const {edges} = graph;
   const errors: string[] = [];
 
@@ -106,7 +106,7 @@ export const checkInvalidRootEdges = (graph: GraphDto): string[] => {
   return errors;
 };
 
-export const checkForDuplicateNodes = (graph: GraphDto): string[] => {
+const checkForDuplicateNodes = (graph: GraphDto): string[] => {
   const {nodes} = graph;
   const errors: string[] = [];
 
@@ -121,7 +121,7 @@ export const checkForDuplicateNodes = (graph: GraphDto): string[] => {
   return errors;
 };
 
-export const checkForDuplicateConnections = (graph: GraphDto): string[] => {
+const checkForDuplicateConnections = (graph: GraphDto): string[] => {
   const {edges} = graph;
   const errors: string[] = [];
 
@@ -137,7 +137,7 @@ export const checkForDuplicateConnections = (graph: GraphDto): string[] => {
   return errors;
 };
 
-export const checkForTwoWayEdges = (graph: GraphDto): string[] => {
+const checkForTwoWayEdges = (graph: GraphDto): string[] => {
   const {edges} = graph;
   const errors: string[] = [];
 
@@ -151,7 +151,7 @@ export const checkForTwoWayEdges = (graph: GraphDto): string[] => {
   return errors;
 };
 
-export const checkForMissingNodes = (graph: GraphDto): string[] => {
+const checkForMissingNodes = (graph: GraphDto): string[] => {
   const {nodes, edges} = graph;
   const errors: string[] = [];
 
@@ -168,7 +168,7 @@ export const checkForMissingNodes = (graph: GraphDto): string[] => {
   return errors;
 };
 
-export const checkForOrphanNodes = (graph: GraphDto): string[] => {
+const checkForOrphanNodes = (graph: GraphDto): string[] => {
   const {nodes, edges} = graph;
   const errors: string[] = [];
 
@@ -191,6 +191,17 @@ export const checkForOrphanNodes = (graph: GraphDto): string[] => {
   return errors;
 };
 
+const checkMaxNodeCount = (graph: GraphDto): string[] => {
+  const {nodes} = graph;
+  const errors: string[] = [];
+
+  if (nodes.length > 40000) {
+    errors.push('Maximum number of nodes is 40,000.');
+  }
+
+  return errors;
+};
+
 export const validateEcosystemGraph = (graph: GraphDto) => {
   const validators = [
     checkRootNodeExists,
@@ -203,6 +214,7 @@ export const validateEcosystemGraph = (graph: GraphDto) => {
     checkForTwoWayEdges,
     checkForMissingNodes,
     checkForOrphanNodes,
+    checkMaxNodeCount,
   ];
 
   const errors = validators.flatMap(validator => validator(graph));

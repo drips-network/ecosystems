@@ -1,15 +1,17 @@
 import {z} from 'zod';
 import {ChainId, SUPPORTED_CHAIN_IDS} from '../../domain/types';
 
-const metadataSchema = z.object({
-  icon: z.string(),
-  title: z.string(),
-  text: z.string().optional(),
-  link: z.object({
-    href: z.string(),
-    label: z.string(),
+const metadataSchema = z.array(
+  z.object({
+    icon: z.string(),
+    title: z.string(),
+    text: z.string().optional(),
+    link: z.object({
+      href: z.string(),
+      label: z.string(),
+    }),
   }),
-});
+);
 
 // A string in the format 'owner/repo' or 'root'.
 const nodeNameSchema = z
@@ -35,10 +37,15 @@ const graphSchema = z.object({
   edges: z.array(edgeSchema),
 });
 
+const addressSchema = z
+  .string()
+  .length(42) // Enforce length with 0x prefix.
+  .regex(/^0x[a-fA-F0-9]{40}$/, 'Invalid address');
+
 export const newEcosystemRequestSchema = z.object({
   graph: graphSchema,
   metadata: metadataSchema,
-  ownerAccountId: z.string(),
+  ownerAddress: addressSchema,
   name: z.string().min(1).max(100),
   chainId: z.enum(Object.values(SUPPORTED_CHAIN_IDS) as [ChainId]),
 });
@@ -46,4 +53,5 @@ export const newEcosystemRequestSchema = z.object({
 export type NodeDto = z.infer<typeof nodeSchema>;
 export type EdgeDto = z.infer<typeof edgeSchema>;
 export type GraphDto = z.infer<typeof graphSchema>;
+export type Address = z.infer<typeof addressSchema>;
 export type NewEcosystemRequestDto = z.infer<typeof newEcosystemRequestSchema>;

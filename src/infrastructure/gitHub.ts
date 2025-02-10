@@ -1,6 +1,6 @@
-import {Octokit} from '@octokit/rest';
-import {config} from './config/configLoader';
+async function gitHub() {
+  const {Octokit} = await import('@octokit/rest');
+  return new Octokit({auth: process.env.GITHUB_TOKEN});
+}
 
-const gitHub = new Octokit({auth: config.gitHubToken});
-
-export default gitHub;
+export {gitHub};

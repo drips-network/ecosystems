@@ -10,13 +10,7 @@ import {
 } from 'typeorm';
 import {Node} from './Node';
 import {AccountId} from '../types';
-
-export type EcosystemState =
-  | 'processing_upload'
-  | 'pending_deployment'
-  | 'deploying'
-  | 'deployed'
-  | 'error';
+import {EcosystemState} from '../../infrastructure/stateMachine/ecosystemStateMachine';
 
 @Entity({name: 'Ecosystems'})
 export class Ecosystem {
@@ -36,7 +30,7 @@ export class Ecosystem {
   public chainId!: string;
 
   @Column({type: 'jsonb'})
-  public metadata!: Record<string, unknown>;
+  public metadata!: Record<string, unknown>[];
 
   @Column({type: 'jsonb', nullable: true})
   public error!: string | null;
@@ -44,8 +38,11 @@ export class Ecosystem {
   @Column({type: 'jsonb'})
   public rawGraph!: Record<string, unknown>;
 
-  @Column({type: 'varchar', length: 200})
-  public ownerAccountId!: AccountId;
+  @Column({type: 'varchar', length: 200, nullable: true})
+  public accountId!: AccountId | null; // The `NftDriver` account ID of the main account for this ecosystem. `null` until the ecosystem is `deployed`.
+
+  @Column({type: 'varchar', length: 42})
+  public ownerAddress!: string | null;
 
   @OneToMany(() => Node, node => node.ecosystem)
   public nodes!: Node[];

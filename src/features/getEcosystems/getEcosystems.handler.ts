@@ -12,7 +12,8 @@ export const handleGetEcosystems =
 
     return ecosystems.map(ecosystem => ({
       id: ecosystem.id,
-      ownerAccountId: ecosystem.ownerAccountId,
+      state: ecosystem.state,
+      accountId: ecosystem.accountId,
       name: ecosystem.name,
       description: ecosystem.description,
       nodeCount: ecosystem.nodes.length,

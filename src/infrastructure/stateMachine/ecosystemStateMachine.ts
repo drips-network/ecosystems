@@ -1,24 +1,37 @@
 import {createMachine} from 'xstate';
 
 export type EcosystemStateMachineEvent =
-  | 'UPLOAD_SUCCESS'
-  | 'UPLOAD_FAILURE'
-  | 'APPROVE'
-  | 'DEPLOY_SUCCESS'
-  | 'DEPLOY_FAILURE';
+  | 'PROCESSING_COMPLETED'
+  | 'PROCESSING_FAILED'
+  | 'DEPLOYMENT_STARTED'
+  | 'DEPLOYMENT_COMPLETED'
+  | 'DEPLOYMENT_FAILED';
+
+export const ECOSYSTEM_STATES = [
+  'processing_graph',
+  'pending_deployment',
+  'deploying',
+  'deployed',
+  'error',
+] as const;
+
+export type EcosystemState = (typeof ECOSYSTEM_STATES)[number];
 
 export const ecosystemStateMachine = createMachine({
   id: 'ecosystem',
-  initial: 'processing_upload',
+  initial: 'processing_graph',
   states: {
-    processing_upload: {
-      on: {UPLOAD_SUCCESS: 'pending_deployment', UPLOAD_FAILURE: 'error'},
+    processing_graph: {
+      on: {
+        PROCESSING_COMPLETED: 'pending_deployment',
+        PROCESSING_FAILED: 'error',
+      },
     },
     pending_deployment: {
-      on: {APPROVE: 'deploying', REJECT: 'error'},
+      on: {DEPLOYMENT_STARTED: 'deploying', DEPLOYMENT_FAILED: 'error'},
     },
     deploying: {
-      on: {DEPLOY_SUCCESS: 'deployed', DEPLOY_FAILURE: 'error'},
+      on: {DEPLOYMENT_COMPLETED: 'deployed', DEPLOYMENT_FAILED: 'error'},
     },
     deployed: {
       type: 'final',

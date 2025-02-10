@@ -14,15 +14,15 @@ export const saveEcosystemIfNotExist = async (
     return existingEcosystem;
   }
 
-  const {name, graph, chainId, ownerAccountId, metadata} = newEcosystem;
+  const {name, graph, chainId, metadata, ownerAddress} = newEcosystem;
   const entity = repository.create({
     name,
     chainId,
+    ownerAddress,
     id: ecosystemId,
     rawGraph: graph,
-    ownerAccountId,
     metadata: metadata,
-    state: 'processing_upload', // Initial state
+    state: 'processing_graph',
   });
 
   return await repository.save(entity);
