@@ -13,12 +13,11 @@ const metadataSchema = z.array(
   }),
 );
 
-// A string in the format 'owner/repo' or 'root'.
 const nodeNameSchema = z
   .string()
   .regex(
-    /^[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+$/,
-    "Expected format is 'owner/repo' or 'root'",
+    /^[@]?[a-zA-Z0-9_.-]+\/[@]?[a-zA-Z0-9_.-]+$/,
+    "Expected format is '@owner/@repo', '@owner/repo', 'owner/@repo', 'owner/repo' or 'root'",
   )
   .or(z.literal('root'));
 

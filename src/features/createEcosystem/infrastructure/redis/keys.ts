@@ -15,3 +15,6 @@ export const buildProcessedJobsCounterKey = (
   chainId: ChainId,
   type: 'success' | 'failed',
 ) => `${buildQueueId(ecosystemId, chainId)}-count-${type}`;
+
+export const buildLockKey = (ecosystemId: UUID, chainId: ChainId) =>
+  `lock-${buildQueueId(ecosystemId, chainId)}`;

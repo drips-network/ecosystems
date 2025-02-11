@@ -6,7 +6,7 @@ import {transitionEcosystemState} from '../../../../infrastructure/stateMachine/
 import {NodeName} from '../../../../domain/types';
 import {saveGraph} from '../database/saveGraph';
 import redis from '../../../../infrastructure/redis';
-import {buildProcessedJobsCounterKey} from '../redis/keys';
+import {buildLockKey, buildProcessedJobsCounterKey} from '../redis/keys';
 import {saveProcessingResultToRedis} from '../redis/saveProcessingResultToRedis';
 import {getQueueProcessingStatus} from '../redis/getQueueProcessingStatus';
 import {loadProcessingResultsFromRedis} from '../redis/loadProcessingResultsFromRedis';
@@ -99,6 +99,18 @@ export const processQueue = async (queue: EcosystemQueue) => {
           logger.info(
             `Queue processing '${queue.name}' completed. All projects verified successfully.`,
           );
+
+          const acquired = await redis.set(
+            buildLockKey(ecosystemId, chainId),
+            'locked',
+            'EX',
+            60, // 1 minute.
+            'NX',
+          );
+          if (!acquired) {
+            // Another process already acquired the lock.
+            return;
+          }
 
           await saveGraph(ecosystemId, successfullyVerifiedJobs);
           await transitionEcosystemState(ecosystemId, 'PROCESSING_COMPLETED');
