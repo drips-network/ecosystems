@@ -1,6 +1,6 @@
 import {Request, Response} from 'express';
 import {newEcosystemRequestSchema} from './createEcosystem.dto';
-import {ValidationError} from '../../application/HttpError';
+import {BadRequestError} from '../../application/HttpError';
 import {logger} from '../../infrastructure/logger';
 import {handleCreateEcosystem} from './createEcosystem.handler';
 
@@ -13,7 +13,7 @@ export const createEcosystemController =
         .map(issue => `- ${issue.path.join('.')} ${issue.message}`)
         .join('\n');
 
-      throw new ValidationError(`Validation failed:\n${formattedErrors}`);
+      throw new BadRequestError(`Validation failed:\n${formattedErrors}`);
     }
 
     const newEcosystemId = await handleCreateEcosystem(req.body);

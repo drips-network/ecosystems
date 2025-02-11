@@ -1,4 +1,4 @@
-import {ValidationError} from '../../../application/HttpError';
+import {BadRequestError} from '../../../application/HttpError';
 import {GraphDto} from '../createEcosystem.dto';
 
 const checkRootNodeExists = (graph: GraphDto): string[] => {
@@ -220,7 +220,7 @@ export const validateEcosystemGraph = (graph: GraphDto) => {
   const errors = validators.flatMap(validator => validator(graph));
 
   if (errors.length > 0) {
-    throw new ValidationError(
+    throw new BadRequestError(
       `Ecosystem graph is not valid:\n${errors.join('\n')}`,
     );
   }

@@ -1,5 +1,5 @@
 import {Request, Response, NextFunction} from 'express';
-import {HttpError, ValidationError} from '../application/HttpError';
+import {HttpError} from '../application/HttpError';
 import {logger} from '../infrastructure/logger';
 
 export const errorHandler = (

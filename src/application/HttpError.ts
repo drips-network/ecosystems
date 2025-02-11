@@ -19,7 +19,7 @@ export class ForbiddenError extends HttpError {
   }
 }
 
-export class ValidationError extends HttpError {
+export class BadRequestError extends HttpError {
   constructor(message = 'Bad Request') {
     super(message, 400);
   }
