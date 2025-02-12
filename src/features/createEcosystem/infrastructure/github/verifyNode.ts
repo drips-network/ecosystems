@@ -1,14 +1,13 @@
-import {RateLimitInfo} from '../queue/createEcosystemQueue';
-import {logger} from '../../../../infrastructure/logger';
-import {getRepoDriverId} from '../repoDriver/getRepoDriverId';
-import {ChainId, NodeName, ProjectName} from '../../../../domain/types';
+import {ChainId, ProjectName} from '../../../../domain/types';
 import {gitHub} from '../../../../infrastructure/gitHub';
+import {getRepoDriverId} from '../repoDriver/getRepoDriverId';
+import assertIsProjectName from '../../../../application/assertIsProjectName';
 
 export type SuccessfulNodeVerificationResult = {
   success: true;
   repoDriverId: string | null; // `null` for the root node.
-  verifiedProjectName: NodeName;
-  originalProjectName: NodeName;
+  verifiedProjectName: ProjectName;
+  originalProjectName: ProjectName;
 };
 
 export type FailedNodeVerificationResult = {
@@ -21,12 +20,16 @@ export type NodeVerificationResult =
   | SuccessfulNodeVerificationResult
   | FailedNodeVerificationResult;
 
-export const verifyNode = async (
-  name: NodeName,
-  chainId: ChainId,
-): Promise<NodeVerificationResult> => {
-  // Skip verification for the root node.
-  if (name === 'root') {
+export type NodeVerificationContext = {
+  chainId: ChainId;
+  projectName: ProjectName;
+};
+
+export default async function verifyNode({
+  chainId,
+  projectName,
+}: NodeVerificationContext): Promise<NodeVerificationResult> {
+  if (projectName === 'root') {
     return {
       success: true,
       repoDriverId: null,
@@ -35,8 +38,7 @@ export const verifyNode = async (
     };
   }
 
-  let latestRateLimit: RateLimitInfo | undefined;
-  const [expectedOwner, expectedRepo] = name.split('/');
+  const [expectedOwner, expectedRepo] = projectName.split('/');
 
   try {
     const {data, headers} = await (
@@ -46,43 +48,48 @@ export const verifyNode = async (
       repo: expectedRepo,
     });
 
-    latestRateLimit = {
+    const latestRateLimit = {
       remaining: Number(headers['x-ratelimit-remaining']),
       resetAt: new Date(Number(headers['x-ratelimit-reset']) * 1000),
       total: Number(headers['x-ratelimit-limit']),
     };
 
-    logger.info('GitHub API rate limit:', {
-      remaining: latestRateLimit.remaining,
-      resetAt: latestRateLimit.resetAt,
-      total: latestRateLimit.total,
-    });
+    // If the rate limit is exceeded, throw an error (to eventually retry the job).
+    if (latestRateLimit.remaining === 0) {
+      throw new Error('GitHub rate limit exceeded.');
+    }
 
     const actualOwner = data.owner.login;
     const actualRepo = data.name;
 
-    const verifiedName = `${actualOwner}/${actualRepo}` as ProjectName;
+    const verifiedName = `${actualOwner}/${actualRepo}`;
+    assertIsProjectName(verifiedName);
 
-    if (name.toLowerCase() !== verifiedName.toLowerCase()) {
-      throw new Error(`Project '${name}' was renamed to '${verifiedName}'.`);
+    // If the project was renamed, consider it a failure.
+    if (projectName.toLowerCase() !== verifiedName.toLowerCase()) {
+      return {
+        success: false,
+        failedProjectName: projectName,
+        error: `${projectName} was renamed to ${verifiedName}`,
+      };
     }
 
     return {
       success: true,
-      originalProjectName: name,
+      originalProjectName: projectName,
       verifiedProjectName: verifiedName,
-      repoDriverId: await getRepoDriverId(chainId, verifiedName),
+      repoDriverId: await getRepoDriverId(chainId, projectName),
     };
   } catch (error) {
-    logger.error(`Error verifying project '${name}':`, error);
+    // If the project was not found, consider it a failure, but a valid result.
+    if ((error as {status?: number}).status === 404) {
+      return {
+        success: false,
+        failedProjectName: projectName,
+        error: `${projectName} not found.`,
+      };
+    }
 
-    return {
-      success: false,
-      failedProjectName: name,
-      error:
-        error instanceof Error
-          ? error.message
-          : `Error verifying project '${name}'.`,
-    };
+    throw error;
   }
-};
+}

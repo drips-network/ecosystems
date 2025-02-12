@@ -1,38 +1,24 @@
-import {ProjectVerificationJobData} from '../queue/createEcosystemQueue';
-import {logger} from '../../../../infrastructure/logger';
 import redis from '../../../../infrastructure/redis';
-import {buildProcessingResultKey, buildProcessedJobsCounterKey} from './keys';
+import {buildProcessedJobsCountKey, buildProcessedResultsKey} from './keys';
 import {NodeVerificationResult} from '../github/verifyNode';
+import {ProjectVerificationJobData} from '../queue/createEcosystemQueue';
 import {Job} from 'bee-queue';
 
-export type ProcessingResult = {
-  job: Pick<Job<ProjectVerificationJobData>, 'id' | 'data'>;
-  verificationResult: NodeVerificationResult;
-};
+export default async function saveProcessingResultToRedis(
+  job: Job<ProjectVerificationJobData>,
+  verificationResult: NodeVerificationResult,
+) {
+  const {ecosystemId, chainId, node, edges} = job.data;
 
-export const saveProcessingResultToRedis = async (
-  processingResult: ProcessingResult,
-) => {
-  const {
-    job: {
-      id,
-      data: {ecosystemId, chainId},
-    },
-    verificationResult,
-  } = processingResult;
+  const key = buildProcessedResultsKey(ecosystemId, chainId);
+  const value = JSON.stringify({verificationResult, node, edges});
 
-  const key = buildProcessingResultKey(ecosystemId, chainId, id);
-  const value = JSON.stringify(processingResult);
-
-  await redis.set(key, value);
-
+  await redis.hset(key, job.id, value);
   await redis.incr(
-    buildProcessedJobsCounterKey(
+    buildProcessedJobsCountKey(
       ecosystemId,
       chainId,
       verificationResult.success ? 'success' : 'failed',
     ),
   );
-
-  logger.debug(`Processing result saved to Redis: ${key} -> ${value}`);
-};
+}

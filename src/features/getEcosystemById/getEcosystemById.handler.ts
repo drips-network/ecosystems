@@ -22,18 +22,22 @@ export const handleGetEcosystemById = async (
     throw new NotFoundError(`Ecosystem with ID '${request.id}' not found.`);
   }
 
-  const edges = await dataSource
-    .getRepository(Edge)
-    .createQueryBuilder('edge')
-    .leftJoinAndSelect('edge.sourceNode', 'sourceNode')
-    .leftJoinAndSelect('edge.targetNode', 'targetNode')
-    .where(
-      'edge.sourceNode IN (:...nodeIds) OR edge.targetNode IN (:...nodeIds)',
-      {
-        nodeIds: ecosystem.nodes.map(node => node.id),
-      },
-    )
-    .getMany();
+  let edges: Edge[] = [];
+
+  if (ecosystem.nodes.length > 0) {
+    edges = await dataSource
+      .getRepository(Edge)
+      .createQueryBuilder('edge')
+      .leftJoinAndSelect('edge.sourceNode', 'sourceNode')
+      .leftJoinAndSelect('edge.targetNode', 'targetNode')
+      .where(
+        'edge.sourceNodeId IN (:...nodeIds) OR edge.targetNodeId IN (:...nodeIds)',
+        {
+          nodeIds: ecosystem.nodes.map(node => node.id),
+        },
+      )
+      .getMany();
+  }
 
   return {
     id: ecosystem.id,

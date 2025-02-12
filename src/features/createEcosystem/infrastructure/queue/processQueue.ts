@@ -1,38 +1,49 @@
 import {EcosystemQueue} from './createEcosystemQueue';
 import {logger} from '../../../../infrastructure/logger';
-import {saveErrors} from '../database/saveErrors';
-import {verifyNode} from '../github/verifyNode';
-import {transitionEcosystemState} from '../../../../infrastructure/stateMachine/transitionEcosystemState';
-import {NodeName} from '../../../../domain/types';
-import {saveGraph} from '../database/saveGraph';
+import transitionEcosystemState from '../../../../infrastructure/stateMachine/transitionEcosystemState';
+import saveGraph from '../database/saveGraph';
 import redis from '../../../../infrastructure/redis';
-import {buildLockKey, buildProcessedJobsCounterKey} from '../redis/keys';
-import {saveProcessingResultToRedis} from '../redis/saveProcessingResultToRedis';
-import {getQueueProcessingStatus} from '../redis/getQueueProcessingStatus';
-import {loadProcessingResultsFromRedis} from '../redis/loadProcessingResultsFromRedis';
-import {deleteRedisData} from '../redis/deleteRedisData';
+import {buildLockKey} from '../redis/keys';
+import saveProcessingResultToRedis from '../redis/saveProcessingResultToRedis';
+import getQueueProcessingStatus from '../redis/getQueueProcessingStatus';
+import loadProcessingResultsFromRedis from '../redis/loadProcessingResultsFromRedis';
+import deleteRedisData from '../redis/deleteRedisData';
+import saveError from '../database/saveError';
+import assertIsProjectName from '../../../../application/assertIsProjectName';
+import verifyNode from '../github/verifyNode';
 
 export const processQueue = async (queue: EcosystemQueue) => {
-  queue.process(100, async job => {
+  queue.process(5, async job => {
+    const {
+      chainId,
+      node: {projectName},
+    } = job.data;
+
+    assertIsProjectName(projectName);
+
     try {
-      const {chainId, node} = job.data;
+      const verificationResult = await verifyNode({projectName, chainId});
 
-      const verificationResult = await verifyNode(
-        node.projectName as NodeName,
-        chainId,
-      );
+      await saveProcessingResultToRedis(job, verificationResult);
 
-      return await saveProcessingResultToRedis({
-        job: {id: job.id, data: job.data},
-        verificationResult,
-      });
+      return Promise.resolve();
     } catch (error) {
       logger.error(
-        `Error processing job '${job.id}' for queue '${queue.name}'':`,
+        `Error while processing job '${job.id}' for '${projectName}' (queue: '${queue.name}'):`,
         error,
       );
 
-      throw error; // This will cause the job to be re-tried (and eventually moved to the 'failed' state if all attempts fail).
+      await saveProcessingResultToRedis(job, {
+        success: false,
+        error:
+          // This will be propagated to the app.
+          error instanceof Error
+            ? error.message
+            : `An unknown error occurred while processing ${projectName}`,
+        failedProjectName: projectName,
+      });
+
+      return Promise.reject(error);
     }
   });
 
@@ -44,118 +55,97 @@ export const processQueue = async (queue: EcosystemQueue) => {
         isProcessingCompleted,
         successfullyProcessedCount,
         unsuccessfullyProcessedCount,
-        hasFailedJobs,
       } = await getQueueProcessingStatus(ecosystemId, chainId, totalJobs);
 
-      // If the queue hasn't finished yet, log the progress and continue.
+      // Processing is not completed yet.
       if (!isProcessingCompleted) {
         logger.info(
-          `Job '${job.id}' succeeded for queue '${queue.name}'. \n${successfullyProcessedCount + unsuccessfullyProcessedCount}/${totalJobs} jobs processed. Continuing...`,
+          `Job '${job.id}' succeeded.
+          \nQueue '${queue.name}' progress: ${successfullyProcessedCount + unsuccessfullyProcessedCount}/${totalJobs} jobs.`,
         );
 
         return;
       }
 
-      logger.info(
-        `Queue '${queue.name}' completed processing all ${totalJobs} jobs.`,
+      // Processing is completed.
+
+      // Acquire a lock to prevent other processes from running the finalization logic.
+      const acquired = await redis.set(
+        buildLockKey(ecosystemId, chainId),
+        'locked',
+        'EX',
+        60, // 1 minute.
+        'NX',
+      );
+      if (!acquired) {
+        // Another process already acquired the lock.
+        return;
+      }
+
+      const {successful, failed} = await loadProcessingResultsFromRedis(
+        ecosystemId,
+        chainId,
+        totalJobs,
       );
 
-      if (hasFailedJobs) {
-        logger.error(
-          `Queue processing '${queue.name}' completed with errors. See logs for details.`,
+      if (failed.length) {
+        const error = JSON.stringify(
+          failed.map(j => j.verificationResult.error),
         );
 
+        logger.warn(
+          `Queue '${queue.name}' processing completed. ${failed.length} project verification(s) failed. Errors: ${error}`,
+        );
+
+        await saveError(ecosystemId, error);
         await transitionEcosystemState(ecosystemId, 'PROCESSING_FAILED');
-
-        await saveErrors(ecosystemId, 'Errors while processing ecosystem.');
       } else {
-        const {
-          hasUnsuccessfulJobs,
-          successfullyVerifiedJobs,
-          unsuccessfullyVerifiedJobs,
-        } = await loadProcessingResultsFromRedis(
-          ecosystemId,
-          chainId,
-          totalJobs,
+        logger.info(
+          `Queue '${queue.name}' processing completed. All projects verified successfully.`,
         );
 
-        if (hasUnsuccessfulJobs) {
-          logger.warn(
-            `Queue processing '${queue.name}' completed with some verification errors.`,
-          );
-
-          await saveErrors(
-            ecosystemId,
-            unsuccessfullyVerifiedJobs
-              .map(
-                j =>
-                  `${j.verificationResult.failedProjectName}:${j.verificationResult.error}`,
-              )
-              .join(','),
-          );
-
-          await transitionEcosystemState(ecosystemId, 'PROCESSING_FAILED');
-        } else {
-          logger.info(
-            `Queue processing '${queue.name}' completed. All projects verified successfully.`,
-          );
-
-          const acquired = await redis.set(
-            buildLockKey(ecosystemId, chainId),
-            'locked',
-            'EX',
-            60, // 1 minute.
-            'NX',
-          );
-          if (!acquired) {
-            // Another process already acquired the lock.
-            return;
-          }
-
-          await saveGraph(ecosystemId, successfullyVerifiedJobs);
-          await transitionEcosystemState(ecosystemId, 'PROCESSING_COMPLETED');
-          await deleteRedisData(ecosystemId, chainId);
-        }
+        await saveGraph(ecosystemId, successful);
+        await transitionEcosystemState(ecosystemId, 'PROCESSING_COMPLETED');
+        await queue.destroy();
+        await deleteRedisData(ecosystemId, chainId);
       }
     } catch (error) {
       logger.error(
-        `Error while processing succeeded job '${job.id}' for queue '${queue.name}'':`,
+        `Error while processing succeeded job '${job.id}' (queue: '${queue.name}'):`,
         error,
       );
 
       await transitionEcosystemState(ecosystemId, 'PROCESSING_FAILED');
-
-      await saveErrors(
+      await saveError(
         ecosystemId,
-        'An error occurred while processing ecosystem job.',
+        'An error occurred while trying to save Ecosystem.',
       );
     }
   });
 
-  queue.on('failed', async (job, err) => {
-    logger.error(`Job ${job.id} failed:`, {error: err});
-
-    await redis.incr(
-      buildProcessedJobsCounterKey(
-        job.data.ecosystemId,
-        job.data.chainId,
-        'failed',
-      ),
+  queue.on('job failed', async (jobId, err) => {
+    logger.error(
+      `❌ Job '${jobId}' (queue: '${queue.name}') failed after all retries:`,
+      err,
     );
+  });
+
+  queue.on('job retrying', (job, err) => {
+    logger.info(
+      `♻️ Job with ID ${job} failed with error '${err.message}' but is being retried...`,
+    );
+  });
+
+  queue.on('error', async err => {
+    logger.error(`🚨 Queue '${queue.name}' error:`, err);
   });
 
   queue.checkStalledJobs(8000, (err, numStalledJobs) => {
     if (err) {
       logger.error(
-        `Error while checking stalled jobs for queue '${queue.name}'. Found ${numStalledJobs} stalled jobs. Error:`,
+        `❌⏱️ Error while checking stalled jobs (queue: '${queue.name}', stalled jobs: ${numStalledJobs}):`,
         err,
       );
     }
-  });
-
-  queue.on('job retrying', (jobId, err) => {
-    logger.info(
-      `Job with ID ${jobId} failed with error '${err.message}' but is being retried...`,
-    );
   });
 };

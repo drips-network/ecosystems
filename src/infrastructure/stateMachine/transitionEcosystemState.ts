@@ -9,10 +9,10 @@ import {dataSource} from '../datasource';
 import {logger} from '../logger';
 import unreachable from '../../application/unreachable';
 
-export const transitionEcosystemState = async (
+export default async function transitionEcosystemState(
   ecosystemId: UUID,
   event: EcosystemStateMachineEvent,
-): Promise<Ecosystem['state']> => {
+): Promise<Ecosystem['state']> {
   const repository = dataSource.getRepository(Ecosystem);
 
   const ecosystem = await repository.findOneBy({id: ecosystemId});
@@ -47,4 +47,4 @@ export const transitionEcosystemState = async (
   await repository.update({id: ecosystem.id}, {state: newState});
 
   return newState;
-};
+}

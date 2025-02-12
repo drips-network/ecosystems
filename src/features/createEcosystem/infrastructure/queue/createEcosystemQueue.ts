@@ -5,12 +5,6 @@ import {EdgeDto, NodeDto} from '../../createEcosystem.dto';
 import {buildQueueId} from '../redis/keys';
 import {config} from '../../../../infrastructure/config/configLoader';
 
-export type RateLimitInfo = {
-  remaining: number;
-  resetAt: Date;
-  total: number;
-};
-
 export type ProjectVerificationJobData = {
   node: NodeDto;
   edges: EdgeDto[];
@@ -28,6 +22,8 @@ export const createEcosystemQueue = (chainId: ChainId, ecosystemId: UUID) => {
     buildQueueId(ecosystemId, chainId),
     {
       isWorker: true,
+      removeOnFailure: true,
+      removeOnSuccess: true,
       activateDelayedJobs: true,
       redis: {url: config.redisConnectionString},
     },

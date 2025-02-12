@@ -12,7 +12,7 @@ import {
   ValueTransformer,
 } from 'typeorm';
 import {Ecosystem} from './Ecosystem';
-import {AccountId, NodeName} from '../types';
+import {AccountId, ProjectName} from '../types';
 import {Edge} from './Edge';
 
 const numericTransformer: ValueTransformer = {
@@ -42,13 +42,13 @@ export class Node {
   public incomingEdges!: Edge[];
 
   @Column({type: 'varchar', length: 200})
-  public projectName!: NodeName;
+  public projectName!: ProjectName;
 
   @Column({type: 'varchar', length: 200, nullable: true})
   public projectAccountId!: AccountId | null; // The `RepoDriver` account ID.
 
   @Column({type: 'varchar', length: 200})
-  public originalProjectName!: NodeName;
+  public originalProjectName!: ProjectName;
 
   @Column({type: 'decimal', transformer: numericTransformer})
   public absoluteWeight!: number;
