@@ -20,11 +20,13 @@ const checkTotalRootsWeight = (graph: GraphDto): string[] => {
   const errors: string[] = [];
 
   const rootEdges = edges.filter(edge => edge.source === 'root');
-
   const totalWeight = rootEdges.reduce((sum, edge) => sum + edge.weight, 0);
-  if (totalWeight !== 100) {
+
+  // Allow a small tolerance for floating point arithmetic.
+  const tolerance = 0.0001;
+  if (Math.abs(totalWeight - 1) > tolerance) {
     errors.push(
-      `Total weight of edges from 'root' must sum to 100, but got ${totalWeight}.`,
+      `Total weight of edges from 'root' must sum to 1, but got ${totalWeight.toFixed(4)}.`,
     );
   }
 
@@ -202,7 +204,29 @@ const checkMaxNodeCount = (graph: GraphDto): string[] => {
   return errors;
 };
 
-export const validateEcosystemGraph = (graph: GraphDto) => {
+const checkEdgeWeights = (graph: GraphDto): string[] => {
+  const {edges} = graph;
+  const errors: string[] = [];
+
+  edges.forEach(edge => {
+    if (typeof edge.weight !== 'number' || isNaN(edge.weight)) {
+      errors.push(
+        `Edge weight for connection ${edge.source} -> ${edge.target} is not a valid number.`,
+      );
+      return;
+    }
+
+    if (edge.weight < 0 || edge.weight > 1) {
+      errors.push(
+        `Edge weight for connection ${edge.source} -> ${edge.target} must be between 0 and 1, but got ${edge.weight}.`,
+      );
+    }
+  });
+
+  return errors;
+};
+
+export const validateGraph = (graph: GraphDto) => {
   const validators = [
     checkRootNodeExists,
     checkTotalRootsWeight,
@@ -215,6 +239,7 @@ export const validateEcosystemGraph = (graph: GraphDto) => {
     checkForMissingNodes,
     checkForOrphanNodes,
     checkMaxNodeCount,
+    checkEdgeWeights,
   ];
 
   const errors = validators.flatMap(validator => validator(graph));

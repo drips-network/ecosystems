@@ -15,26 +15,26 @@ export default async function saveGraph(
 ) {
   await dataSource.transaction(async manager => {
     const ecosystem = await getEcosystemById(ecosystemId, manager);
-
     const nodes = await saveNodes(ecosystem, successfulResults, manager);
-
     const edges = await saveEdges(successfulResults, ecosystem, nodes, manager);
 
     await saveNodeAbsolutePercentages(nodes, edges, manager);
-
-    logger.info(
-      `Successfully saved nodes, edges, and computed percentages for ecosystem '${ecosystemId}'.`,
-    );
   });
+
+  logger.info(
+    `Successfully saved nodes, edges, and computed percentages for ecosystem '${ecosystemId}'.`,
+  );
 }
 
 async function getEcosystemById(ecosystemId: UUID, manager: EntityManager) {
   const ecosystem = await manager.getRepository(Ecosystem).findOneBy({
     id: ecosystemId,
   });
+
   if (!ecosystem) {
     throw new Error(`Ecosystem with id '${ecosystemId}' not found.`);
   }
+
   return ecosystem;
 }
 
@@ -63,7 +63,7 @@ async function saveNodes(
     });
   });
 
-  return await nodeRepository.save(nodes);
+  return await manager.save(nodes);
 }
 
 async function saveEdges(
@@ -74,7 +74,43 @@ async function saveEdges(
 ) {
   const edgeRepository = manager.getRepository(Edge);
 
-  const edges = successfulResults.flatMap(result => result.edges);
+  // Create a mapping of original names to verified names.
+  const projectNameMap = new Map(
+    successfulResults.map(result => [
+      result.verificationResult.originalProjectName.toLowerCase(), // Lowercase for case-insensitive lookup.
+      result.verificationResult.verifiedProjectName,
+    ]),
+  ) as Map<ProjectName, string>;
+
+  // Map edges using verified names.
+  const edges = successfulResults.flatMap(result =>
+    result.edges.map(edge => {
+      const verifiedTarget = projectNameMap.get(
+        edge.target.toLowerCase() as ProjectName,
+      );
+      const verifiedSource = projectNameMap.get(
+        edge.source.toLowerCase() as ProjectName,
+      );
+      if (!verifiedTarget) {
+        unreachable(
+          `Edge references unverified dependency: ${edge.target} from ${result.verificationResult.verifiedProjectName}. ` +
+            'This indicates all dependencies were not properly verified.',
+        );
+      }
+      if (!verifiedSource) {
+        unreachable(
+          `Edge references unverified dependency: ${edge.source} from ${result.verificationResult.verifiedProjectName}. ` +
+            'This indicates all dependencies were not properly verified.',
+        );
+      }
+
+      return {
+        source: verifiedSource,
+        target: verifiedTarget,
+        weight: edge.weight,
+      };
+    }),
+  );
 
   const existingEdges = await fetchEcosystemEdges(ecosystem, edges, manager);
 
@@ -102,7 +138,9 @@ async function saveEdges(
       const targetNode = nodeMap.get(edge.target as ProjectName);
 
       if (!sourceNode || !targetNode) {
-        unreachable(`Node not found for edge ${edge.source} -> ${edge.target}`);
+        unreachable(
+          `Node not found for edge ${edge.source} -> ${edge.target}. `,
+        );
       }
 
       return edgeRepository.create({
@@ -177,8 +215,6 @@ async function saveNodeAbsolutePercentages(
   }
 
   for (const edge of edges) {
-    // Normalize weight: if weight > 1, assume it’s given as a percentage (e.g., 100) and convert to decimal.
-    const normalizedWeight = edge.weight > 1 ? edge.weight / 100 : edge.weight;
     const sourceEntry = computedGraph.get(edge.sourceNode.projectName);
     const targetEntry = computedGraph.get(edge.targetNode.projectName);
     if (!sourceEntry || !targetEntry) {
@@ -189,12 +225,12 @@ async function saveNodeAbsolutePercentages(
     // Outgoing edge from source.
     sourceEntry.outgoingEdges.push({
       target: edge.targetNode.projectName,
-      weight: normalizedWeight,
+      weight: edge.weight,
     });
     // Incoming edge to target.
     targetEntry.incomingEdges.push({
       source: edge.sourceNode.projectName,
-      weight: normalizedWeight,
+      weight: edge.weight,
     });
   }
 

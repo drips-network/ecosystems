@@ -17,7 +17,7 @@ export type EcosystemQueue = BeeQueue<ProjectVerificationJobData> & {
   name: UUID;
 };
 
-export const createEcosystemQueue = (chainId: ChainId, ecosystemId: UUID) => {
+export const createQueue = (chainId: ChainId, ecosystemId: UUID) => {
   return new BeeQueue<ProjectVerificationJobData>(
     buildQueueId(ecosystemId, chainId),
     {
