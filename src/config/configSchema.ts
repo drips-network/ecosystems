@@ -1,5 +1,5 @@
 import {z} from 'zod';
-import {SUPPORTED_CHAIN_IDS} from '../../domain/types';
+import {SUPPORTED_CHAIN_IDS} from '../common/domain/types';
 
 const loggingConfigSchema = z.object({
   level: z.enum(['trace', 'debug', 'info', 'warn', 'error']).default('info'),

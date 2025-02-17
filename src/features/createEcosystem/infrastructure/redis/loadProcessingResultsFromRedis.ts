@@ -1,14 +1,14 @@
-import unreachable from '../../../../application/unreachable';
-import {logger} from '../../../../infrastructure/logger';
+import {logger} from '../../../../common/infrastructure/logger';
 import {
   FailedNodeVerificationResult,
   SuccessfulNodeVerificationResult,
 } from '../github/verifyNode';
-import redis from '../../../../infrastructure/redis';
-import {ChainId} from '../../../../domain/types';
+import redis from '../../../../common/infrastructure/redis';
 import {buildProcessedResultsKey, buildQueueId} from './keys';
 import {UUID} from 'crypto';
-import {EdgeDto, NodeDto} from '../../createEcosystem.dto';
+import {EdgeDto, NodeDto} from '../../api/createEcosystemDtos';
+import {ChainId} from '../../../../common/domain/types';
+import unreachable from '../../../../common/application/unreachable';
 
 export type SuccessfulProcessingResult = {
   node: NodeDto;

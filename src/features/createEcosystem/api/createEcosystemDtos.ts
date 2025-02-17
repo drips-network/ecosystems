@@ -1,5 +1,5 @@
 import {z} from 'zod';
-import {ChainId, SUPPORTED_CHAIN_IDS} from '../../domain/types';
+import {ChainId, SUPPORTED_CHAIN_IDS} from '../../../common/domain/types';
 
 const metadataSchema = z.array(
   z.object({

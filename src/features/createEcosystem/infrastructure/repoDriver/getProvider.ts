@@ -1,8 +1,8 @@
 import {FetchRequest} from 'ethers';
 import FailoverJsonRpcProvider from './FailoverJsonRpcProvider';
-import {ChainId} from '../../../../domain/types';
-import unreachable from '../../../../application/unreachable';
-import {config} from '../../../../infrastructure/config/configLoader';
+import {ChainId} from '../../../../common/domain/types';
+import unreachable from '../../../../common/application/unreachable';
+import {config} from '../../../../config/configLoader';
 
 const {rpc: rpcConfig} = config;
 

@@ -1,7 +1,7 @@
-import redis from '../../../../infrastructure/redis';
-import {ChainId} from '../../../../domain/types';
+import redis from '../../../../common/infrastructure/redis';
 import {UUID} from 'crypto';
 import {buildProcessedJobsCountKey} from './keys';
+import {ChainId} from '../../../../common/domain/types';
 
 export default async function getQueueProcessingStatus(
   ecosystemId: UUID,

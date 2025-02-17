@@ -1,6 +1,6 @@
 import {Router} from 'express';
-import {getEcosystemByIdController} from './getEcosystemById.controller';
-import {asyncWrapper} from '../../application/asyncWrapper';
+import {getEcosystemByIdController} from './getEcosystemByIdController';
+import {asyncWrapper} from '../../common/application/asyncWrapper';
 
 const router = Router();
 

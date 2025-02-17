@@ -1,6 +1,6 @@
-import {Ecosystem} from '../../domain/entities.ts/Ecosystem';
-import {dataSource} from '../../infrastructure/datasource';
-import {GetEcosystemsResponseDto, MetadataDto} from './getEcosystems.dto';
+import {Ecosystem} from '../../common/domain/entities.ts/Ecosystem';
+import {dataSource} from '../../common/infrastructure/datasource';
+import {GetEcosystemsResponseDto, MetadataDto} from './getEcosystemsDto';
 
 export const handleGetEcosystems =
   async (): Promise<GetEcosystemsResponseDto> => {

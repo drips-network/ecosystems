@@ -1,6 +1,6 @@
 import {Contract, hexlify, toUtf8Bytes} from 'ethers';
-import {ChainId, SUPPORTED_CHAIN_IDS} from '../../../../domain/types';
 import getProvider from './getProvider';
+import {ChainId, SUPPORTED_CHAIN_IDS} from '../../../../common/domain/types';
 
 const REPO_DRIVER_ABI = [
   {

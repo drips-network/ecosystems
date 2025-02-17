@@ -1,32 +1,18 @@
 import {UUID} from 'crypto';
-import {logger} from '../../../../infrastructure/logger';
-import {dataSource} from '../../../../infrastructure/datasource';
-import {Node} from '../../../../domain/entities.ts/Node';
-import {Edge} from '../../../../domain/entities.ts/Edge';
-import unreachable from '../../../../application/unreachable';
-import {Ecosystem} from '../../../../domain/entities.ts/Ecosystem';
-import {ProjectName} from '../../../../domain/types';
 import {EntityManager} from 'typeorm';
 import {SuccessfulProcessingResult} from '../redis/loadProcessingResultsFromRedis';
+import unreachable from '../../../../common/application/unreachable';
+import {Ecosystem} from '../../../../common/domain/entities.ts/Ecosystem';
+import {Edge} from '../../../../common/domain/entities.ts/Edge';
+import {Node} from '../../../../common/domain/entities.ts/Node';
+import {ProjectName} from '../../../../common/domain/types';
+import {NewEcosystemRequestDto} from '../../api/createEcosystemDtos';
+import {dataSource} from '../../../../common/infrastructure/datasource';
 
-export default async function saveGraph(
+export async function getEcosystemById(
   ecosystemId: UUID,
-  successfulResults: SuccessfulProcessingResult[],
+  manager: EntityManager,
 ) {
-  await dataSource.transaction(async manager => {
-    const ecosystem = await getEcosystemById(ecosystemId, manager);
-    const nodes = await saveNodes(ecosystem, successfulResults, manager);
-    const edges = await saveEdges(successfulResults, ecosystem, nodes, manager);
-
-    await saveNodeAbsolutePercentages(nodes, edges, manager);
-  });
-
-  logger.info(
-    `Successfully saved nodes, edges, and computed percentages for ecosystem '${ecosystemId}'.`,
-  );
-}
-
-async function getEcosystemById(ecosystemId: UUID, manager: EntityManager) {
   const ecosystem = await manager.getRepository(Ecosystem).findOneBy({
     id: ecosystemId,
   });
@@ -38,7 +24,7 @@ async function getEcosystemById(ecosystemId: UUID, manager: EntityManager) {
   return ecosystem;
 }
 
-async function saveNodes(
+export async function saveNodes(
   ecosystem: Ecosystem,
   successfulResults: SuccessfulProcessingResult[],
   manager: EntityManager,
@@ -66,7 +52,7 @@ async function saveNodes(
   return await manager.save(nodes);
 }
 
-async function saveEdges(
+export async function saveEdges(
   successfulResults: SuccessfulProcessingResult[],
   ecosystem: Ecosystem,
   nodes: Node[],
@@ -189,85 +175,15 @@ async function fetchEcosystemEdges(
   return await manager.query(sql, parameters);
 }
 
-async function saveNodeAbsolutePercentages(
+export async function updateNodesWithAbsolutePercentages(
   nodes: Node[],
-  edges: Edge[],
+  percentages: Map<ProjectName, number>,
   manager: EntityManager,
 ) {
-  type ComputedNode = {
-    node: Node;
-    incomingEdges: Array<{source: string; weight: number}>;
-    outgoingEdges: Array<{target: string; weight: number}>;
-    absoluteWeight: number;
-    inDegree: number; // Number of incoming edges.
-  };
-
-  const computedGraph = new Map<ProjectName, ComputedNode>();
-
-  for (const node of nodes) {
-    computedGraph.set(node.projectName, {
-      node,
-      incomingEdges: [],
-      outgoingEdges: [],
-      absoluteWeight: 0,
-      inDegree: 0,
-    });
-  }
-
-  for (const edge of edges) {
-    const sourceEntry = computedGraph.get(edge.sourceNode.projectName);
-    const targetEntry = computedGraph.get(edge.targetNode.projectName);
-    if (!sourceEntry || !targetEntry) {
-      unreachable(
-        `Missing computed graph node for edge ${edge.sourceNode.projectName} -> ${edge.targetNode.projectName}`,
-      );
-    }
-    // Outgoing edge from source.
-    sourceEntry.outgoingEdges.push({
-      target: edge.targetNode.projectName,
-      weight: edge.weight,
-    });
-    // Incoming edge to target.
-    targetEntry.incomingEdges.push({
-      source: edge.sourceNode.projectName,
-      weight: edge.weight,
-    });
-  }
-
-  // Set `inDegree` for each node.
-  for (const entry of computedGraph.values()) {
-    entry.inDegree = entry.incomingEdges.length;
-  }
-
-  // For the `root` node assign an initial percentage to 100%.
-  const rootNode = computedGraph.get('root');
-  if (!rootNode) {
-    unreachable('Root node not found in the computed graph.');
-  }
-  rootNode.absoluteWeight = 1;
-
-  // Propagate percentages in topological order using a pointer-based queue.
-  const queue: ComputedNode[] = [rootNode];
-  let pointer = 0; // Pointer to the current element in the queue.
-  while (pointer < queue.length) {
-    const current = queue[pointer];
-    pointer++;
-
-    for (const outEdge of current.outgoingEdges) {
-      const targetEntry = computedGraph.get(outEdge.target as ProjectName)!;
-
-      // Each parent's contribution is parent's absoluteWeight multiplied by the normalized edge weight.
-      targetEntry.absoluteWeight += current.absoluteWeight * outEdge.weight;
-
-      // Decrement the `inDegree` (dependency counter).
-      targetEntry.inDegree--;
-      if (targetEntry.inDegree === 0) {
-        queue.push(targetEntry);
-      }
-    }
-  }
-
-  const computedNodes = Array.from(computedGraph.values());
+  const computedNodes = nodes.map(node => ({
+    id: node.id,
+    percentage: percentages.get(node.projectName) ?? 0,
+  }));
   const batchSize = 500;
 
   // Process the nodes in batches.
@@ -283,7 +199,7 @@ async function saveNodeAbsolutePercentages(
     // Prepare the parameters in the correct order.
     const parameters: (string | number)[] = [];
     batch.forEach(entry => {
-      parameters.push(entry.node.id, entry.absoluteWeight);
+      parameters.push(entry.id, entry.percentage);
     });
 
     // Execute the update query using a CTE and parameterized values.
@@ -300,4 +216,45 @@ async function saveNodeAbsolutePercentages(
       parameters,
     );
   }
+}
+
+export const saveEcosystemIfNotExist = async (
+  ecosystemId: UUID,
+  newEcosystem: NewEcosystemRequestDto,
+) => {
+  const repository = dataSource.getRepository(Ecosystem);
+
+  const existingEcosystem = await repository.findOneBy({id: ecosystemId});
+  if (existingEcosystem) {
+    return existingEcosystem;
+  }
+
+  const {name, graph, chainId, metadata, ownerAddress} = newEcosystem;
+  const entity = repository.create({
+    name,
+    chainId,
+    ownerAddress,
+    id: ecosystemId,
+    rawGraph: graph,
+    metadata: metadata,
+    state: 'processing_graph',
+  });
+
+  return await repository.save(entity);
+};
+
+export async function saveError(ecosystemId: UUID, error: string) {
+  const repository = dataSource.getRepository(Ecosystem);
+
+  const ecosystem = await repository.findOneBy({
+    id: ecosystemId,
+  });
+
+  if (!ecosystem) {
+    unreachable(`Ecosystem '${ecosystemId}' not found.`);
+  }
+
+  ecosystem.error = error;
+
+  await repository.save(ecosystem);
 }

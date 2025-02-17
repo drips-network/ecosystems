@@ -1,8 +1,8 @@
 import {Request, Response} from 'express';
-import {newEcosystemRequestSchema} from './createEcosystem.dto';
-import {BadRequestError} from '../../application/HttpError';
-import {logger} from '../../infrastructure/logger';
-import {handleCreateEcosystem} from './createEcosystem.handler';
+import {newEcosystemRequestSchema} from './createEcosystemDtos';
+import {handleCreateEcosystem} from '../application/createEcosystemHandler';
+import {logger} from '../../../common/infrastructure/logger';
+import {BadRequestError} from '../../../common/application/HttpError';
 
 export const createEcosystemController =
   () =>

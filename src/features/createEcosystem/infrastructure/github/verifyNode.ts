@@ -1,7 +1,7 @@
-import {ChainId, ProjectName} from '../../../../domain/types';
-import {gitHub} from '../../../../infrastructure/gitHub';
+import {gitHub} from '../../../../common/infrastructure/gitHub';
 import {getRepoDriverId} from '../repoDriver/getRepoDriverId';
-import assertIsProjectName from '../../../../application/assertIsProjectName';
+import {ProjectName, ChainId} from '../../../../common/domain/types';
+import assertIsProjectName from '../../../../common/application/assertIsProjectName';
 
 export type SuccessfulNodeVerificationResult = {
   success: true;

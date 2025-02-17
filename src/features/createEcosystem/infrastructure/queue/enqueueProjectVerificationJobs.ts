@@ -1,7 +1,7 @@
 import {UUID} from 'crypto';
-import {ChainId} from '../../../../domain/types';
 import {ProjectVerificationJobData, EcosystemQueue} from './createQueue';
-import {GraphDto} from '../../createEcosystem.dto';
+import {GraphDto} from '../../api/createEcosystemDtos';
+import {ChainId} from '../../../../common/domain/types';
 
 export const enqueueProjectVerificationJobs = async (
   chainId: ChainId,

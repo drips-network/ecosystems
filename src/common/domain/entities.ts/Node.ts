@@ -9,22 +9,11 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
-  ValueTransformer,
 } from 'typeorm';
 import {Ecosystem} from './Ecosystem';
 import {AccountId, ProjectName} from '../types';
 import {Edge} from './Edge';
-
-const numericTransformer: ValueTransformer = {
-  // When reading from the database, convert the string to a number.
-  from: (value: string | null): number | null => {
-    return value === null ? null : parseFloat(value);
-  },
-  // When writing to the database, keep it as is.
-  to: (value: number | null): number | null => {
-    return value;
-  },
-};
+import {numericTransformer} from '../numericTransformer';
 
 @Index('ecosystem', ['ecosystem'])
 @Entity({name: 'Nodes'})

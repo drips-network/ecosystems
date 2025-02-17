@@ -1,5 +1,5 @@
 import {UUID} from 'crypto';
-import {ChainId} from '../../../../domain/types';
+import {ChainId} from '../../../../common/domain/types';
 
 export const buildQueueId = (ecosystemId: UUID, chainId: ChainId) =>
   `ecosystem:${ecosystemId}-chain:${chainId}`;

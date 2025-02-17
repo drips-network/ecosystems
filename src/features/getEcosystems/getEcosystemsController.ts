@@ -1,5 +1,5 @@
 import {Request, Response} from 'express';
-import {handleGetEcosystems} from './getEcosystems.handler';
+import {handleGetEcosystems} from './getEcosystemsHandler';
 
 export const getEcosystemsController =
   () =>

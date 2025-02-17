@@ -1,5 +1,5 @@
 import {object, z} from 'zod';
-import {ECOSYSTEM_STATES} from '../../infrastructure/stateMachine/ecosystemStateMachine';
+import {ECOSYSTEM_STATES} from '../../common/infrastructure/stateMachine/ecosystemStateMachine';
 
 const metadataSchema = z.array(
   z.object({

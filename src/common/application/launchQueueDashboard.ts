@@ -3,7 +3,7 @@ import Arena from 'bull-arena';
 import BeeQueue from 'bee-queue';
 import Redis from 'ioredis';
 import {RequestHandler} from 'express';
-import {config} from '../../../../infrastructure/config/configLoader';
+import {config} from '../../config/configLoader';
 
 let arenaRouter: Router | null = null;
 const redis = new Redis(config.redisConnectionString);

@@ -1,9 +1,9 @@
 import BeeQueue from 'bee-queue';
 import {UUID} from 'crypto';
-import {ChainId} from '../../../../domain/types';
-import {EdgeDto, NodeDto} from '../../createEcosystem.dto';
+import {EdgeDto, NodeDto} from '../../api/createEcosystemDtos';
 import {buildQueueId} from '../redis/keys';
-import {config} from '../../../../infrastructure/config/configLoader';
+import {ChainId} from '../../../../common/domain/types';
+import {config} from '../../../../config/configLoader';
 
 export type ProjectVerificationJobData = {
   node: NodeDto;

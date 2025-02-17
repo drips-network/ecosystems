@@ -1,6 +1,6 @@
 import {Request, Response} from 'express';
-import {handleGetEcosystemById} from './getEcosystemById.handler';
-import {getEcosystemByIdRequestSchema} from './getEcosystemById.dto';
+import {handleGetEcosystemById} from './getEcosystemByIdHandler';
+import {getEcosystemByIdRequestSchema} from './getEcosystemByIdDto';
 
 export const getEcosystemByIdController =
   () =>

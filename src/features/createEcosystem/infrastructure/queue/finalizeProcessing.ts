@@ -1,12 +1,12 @@
 import {UUID} from 'crypto';
-import {logger} from '../../../../infrastructure/logger';
-import transitionEcosystemState from '../../../../infrastructure/stateMachine/transitionEcosystemState';
-import saveError from '../database/saveError';
-import saveGraph from '../database/saveGraph';
+import {logger} from '../../../../common/infrastructure/logger';
+import transitionEcosystemState from '../../../../common/infrastructure/stateMachine/transitionEcosystemState';
 import deleteRedisData from '../redis/deleteRedisData';
 import loadProcessingResultsFromRedis from '../redis/loadProcessingResultsFromRedis';
 import {EcosystemQueue} from './createQueue';
-import {ChainId} from '../../../../domain/types';
+import {ChainId} from '../../../../common/domain/types';
+import saveGraph from '../../application/saveGraph';
+import {saveError} from '../database/ecosystemRepository';
 
 export default async function finalizeProcessing(
   ecosystemId: UUID,

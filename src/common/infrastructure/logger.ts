@@ -1,6 +1,6 @@
 import winston from 'winston';
-import {LoggingConfig} from './config/configSchema';
-import {config} from './config/configLoader';
+import {LoggingConfig} from '../../config/configSchema';
+import {config} from '../../config/configLoader';
 
 function createLogger(config: LoggingConfig): winston.Logger {
   const formats = [

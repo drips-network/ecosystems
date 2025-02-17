@@ -1,5 +1,5 @@
 import {z} from 'zod';
-import {ECOSYSTEM_STATES} from '../../infrastructure/stateMachine/ecosystemStateMachine';
+import {ECOSYSTEM_STATES} from '../../common/infrastructure/stateMachine/ecosystemStateMachine';
 
 export const getEcosystemByIdRequestSchema = z.object({
   id: z.string().uuid(),

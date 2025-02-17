@@ -1,10 +1,10 @@
 import {randomUUID, UUID} from 'crypto';
-import {NewEcosystemRequestDto} from './createEcosystem.dto';
-import {createQueue} from './infrastructure/queue/createQueue';
-import {enqueueProjectVerificationJobs} from './infrastructure/queue/enqueueProjectVerificationJobs';
-import {processQueue} from './infrastructure/queue/processQueue';
-import {saveEcosystemIfNotExist} from './infrastructure/database/saveEcosystemIfNotExist';
-import {validateGraph} from './application/validateGraph';
+import {NewEcosystemRequestDto} from '../api/createEcosystemDtos';
+import {createQueue} from '../infrastructure/queue/createQueue';
+import {enqueueProjectVerificationJobs} from '../infrastructure/queue/enqueueProjectVerificationJobs';
+import {processQueue} from '../infrastructure/queue/processQueue';
+import {validateGraph} from './validateGraph';
+import {saveEcosystemIfNotExist} from '../infrastructure/database/ecosystemRepository';
 
 export const handleCreateEcosystem = async (
   request: NewEcosystemRequestDto,

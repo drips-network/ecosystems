@@ -1,5 +1,5 @@
-import assertIsProjectName from '../../../../application/assertIsProjectName';
-import {logger} from '../../../../infrastructure/logger';
+import assertIsProjectName from '../../../../common/application/assertIsProjectName';
+import {logger} from '../../../../common/infrastructure/logger';
 import verifyNode from '../github/verifyNode';
 import saveProcessingResultToRedis from '../redis/saveProcessingResultToRedis';
 import {EcosystemQueue} from './createQueue';

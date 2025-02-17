@@ -1,6 +1,6 @@
 import {Request, Response, NextFunction} from 'express';
 import {HttpError} from '../application/HttpError';
-import {logger} from '../infrastructure/logger';
+import {logger} from './logger';
 
 export const errorHandler = (
   error: unknown,

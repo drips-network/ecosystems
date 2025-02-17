@@ -1,5 +1,5 @@
 import {Job} from 'bee-queue';
-import redis from '../../../../infrastructure/redis';
+import redis from '../../../../common/infrastructure/redis';
 import {
   buildProcessedResultsKey,
   buildProcessedJobsCountKey,

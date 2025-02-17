@@ -1,5 +1,5 @@
-import {BadRequestError} from '../../../application/HttpError';
-import {GraphDto} from '../createEcosystem.dto';
+import {BadRequestError} from '../../../common/application/HttpError';
+import {GraphDto} from '../api/createEcosystemDtos';
 
 const checkRootNodeExists = (graph: GraphDto): string[] => {
   const {nodes} = graph;

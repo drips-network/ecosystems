@@ -1,8 +1,8 @@
-import {logger} from '../../../../infrastructure/logger';
-import redis from '../../../../infrastructure/redis';
+import {logger} from '../../../../common/infrastructure/logger';
+import redis from '../../../../common/infrastructure/redis';
 import {UUID} from 'crypto';
 import {buildQueueId} from './keys';
-import {ChainId} from '../../../../domain/types';
+import {ChainId} from '../../../../common/domain/types';
 
 export default async function deleteRedisData(
   ecosystemId: UUID,
