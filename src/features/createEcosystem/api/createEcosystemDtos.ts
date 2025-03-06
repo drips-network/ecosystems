@@ -1,5 +1,6 @@
 import {z} from 'zod';
 import {ChainId, SUPPORTED_CHAIN_IDS} from '../../../common/domain/types';
+import {addressSchema} from '../../../common/application/schemas';
 
 const metadataSchema = z.array(
   z.object({
@@ -36,17 +37,19 @@ const graphSchema = z.object({
   edges: z.array(edgeSchema),
 });
 
-const addressSchema = z
-  .string()
-  .length(42) // Enforce length with 0x prefix.
-  .regex(/^0x[a-fA-F0-9]{40}$/, 'Invalid address');
+const emojiAvatarSchema = z.object({
+  type: z.literal('emoji'),
+  emoji: z.string(),
+});
 
 export const newEcosystemRequestSchema = z.object({
   graph: graphSchema,
   metadata: metadataSchema,
   ownerAddress: addressSchema,
   name: z.string().min(1).max(100),
+  description: z.string().min(1).max(1000).optional(),
   chainId: z.enum(Object.values(SUPPORTED_CHAIN_IDS) as [ChainId]),
+  avatar: emojiAvatarSchema,
 });
 
 export type NodeDto = z.infer<typeof nodeSchema>;

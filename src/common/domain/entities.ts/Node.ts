@@ -34,6 +34,9 @@ export class Node {
   public projectName!: ProjectName;
 
   @Column({type: 'varchar', length: 200, nullable: true})
+  public url!: string | null;
+
+  @Column({type: 'varchar', length: 200, nullable: true})
   public projectAccountId!: AccountId | null; // The `RepoDriver` account ID.
 
   @Column({type: 'varchar', length: 200})

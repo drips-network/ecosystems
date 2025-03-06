@@ -1,16 +1,17 @@
-import {UUID} from 'crypto';
 import {
   GetEcosystemByIdRequestDto,
   GetEcosystemByIdResponseDto,
 } from './getEcosystemByIdDto';
 import {getEcosystemWithNodesAndEdgesById} from './getEcosystemWithNodesAndEdgesById';
+import {assertIsUUID} from '../../common/application/assertions';
 
 export const handleGetEcosystemById = async (
   request: GetEcosystemByIdRequestDto,
 ): Promise<GetEcosystemByIdResponseDto> => {
-  const {ecosystem, edges} = await getEcosystemWithNodesAndEdgesById(
-    request.id as UUID,
-  );
+  const {id} = request;
+  assertIsUUID(id);
+
+  const {ecosystem, edges} = await getEcosystemWithNodesAndEdgesById(id);
 
   return {
     id: ecosystem.id,

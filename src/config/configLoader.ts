@@ -20,6 +20,13 @@ function loadConfig(): Config {
       ? rpcConfigSchema.parse(JSON.parse(process.env.RPC_CONFIG))
       : undefined,
     gitHubToken: process.env.GITHUB_TOKEN,
+    walletPrivateKey: process.env.WALLET_PRIVATE_KEY,
+    shouldSponsorTxs: process.env.SHOULD_SPONSOR_TXS === 'true',
+    txConfirmationInterval: process.env.TX_CONFIRMATION_INTERVAL,
+    pinata: {
+      apiKey: process.env.PINATA_API_KEY,
+      secretApiKey: process.env.PINATA_SECRET_API_KEY,
+    },
   };
 
   try {

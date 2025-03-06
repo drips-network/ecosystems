@@ -1,4 +1,4 @@
-import {object, z} from 'zod';
+import {z} from 'zod';
 import {ECOSYSTEM_STATES} from '../../common/infrastructure/stateMachine/ecosystemStateMachine';
 
 const metadataSchema = z.array(
@@ -18,7 +18,7 @@ const ecosystemSchema = z.object({
   accountId: z.string().nullable(),
   name: z.string(),
   description: z.string().nullable().optional(),
-  nodeCount: z.number(),
+  nodeCount: z.number().nullable(),
   metadata: metadataSchema,
   state: z.enum(ECOSYSTEM_STATES),
 });

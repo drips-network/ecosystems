@@ -28,7 +28,11 @@ export const ecosystemStateMachine = createMachine({
       },
     },
     pending_deployment: {
-      on: {DEPLOYMENT_STARTED: 'deploying', DEPLOYMENT_FAILED: 'error'},
+      on: {
+        DEPLOYMENT_STARTED: 'deploying',
+        DEPLOYMENT_FAILED: 'error',
+        DEPLOYMENT_COMPLETED: 'deployed',
+      },
     },
     deploying: {
       on: {DEPLOYMENT_COMPLETED: 'deployed', DEPLOYMENT_FAILED: 'error'},
@@ -36,6 +40,10 @@ export const ecosystemStateMachine = createMachine({
     deployed: {
       type: 'final',
     },
-    error: {},
+    error: {
+      on: {
+        DEPLOYMENT_COMPLETED: 'deployed',
+      },
+    },
   },
 });

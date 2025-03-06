@@ -1,11 +1,18 @@
-import assertIsProjectName from '../../../../common/application/assertIsProjectName';
+import BeeQueue from 'bee-queue';
+import {assertIsProjectName} from '../../../../common/application/assertions';
 import {logger} from '../../../../common/infrastructure/logger';
 import verifyNode from '../github/verifyNode';
-import saveProcessingResultToRedis from '../redis/saveProcessingResultToRedis';
-import {EcosystemQueue} from './createQueue';
 import finalizeProcessing from './finalizeProcessing';
+import {ProjectVerificationJobData} from './enqueueProjectVerificationJobs';
+import {saveProcessedJob} from '../../../../common/infrastructure/redis/saveProcessedJob';
+import createRedisOptions, {
+  FailedProjectVerificationResult,
+  SuccessfulProjectVerificationResult,
+} from '../redis/createRedisOptions';
 
-export const processQueue = async (queue: EcosystemQueue) => {
+export const processQueue = async (
+  queue: BeeQueue<ProjectVerificationJobData>,
+) => {
   queue.process(10, async job => {
     const {
       chainId,
@@ -13,14 +20,32 @@ export const processQueue = async (queue: EcosystemQueue) => {
       totalJobs,
       node: {projectName},
     } = job.data;
-
     assertIsProjectName(projectName);
 
     try {
       const verificationResult = await verifyNode({projectName, chainId});
 
-      const {isProcessingCompleted, progress} =
-        await saveProcessingResultToRedis(job, verificationResult);
+      if (!verificationResult.success) {
+        job.retries(0); // No need to retry if verification failed.
+      }
+
+      const {isProcessingCompleted, progress} = await saveProcessedJob(
+        job,
+        verificationResult.success
+          ? ({
+              verificationResult,
+              node: job.data.node,
+              edges: job.data.edges,
+              success: true as const,
+              originalProjectName: projectName,
+            } as SuccessfulProjectVerificationResult)
+          : ({
+              success: false as const,
+              error: verificationResult.error,
+              verificationResult,
+            } as FailedProjectVerificationResult),
+        createRedisOptions(ecosystemId, chainId),
+      );
 
       logger.info(
         `⏳ Progress: ${progress}/${totalJobs} (queue: '${queue.name}', processed job '${job.id}', project: '${projectName}').`,
@@ -37,15 +62,18 @@ export const processQueue = async (queue: EcosystemQueue) => {
         error,
       );
 
-      await saveProcessingResultToRedis(job, {
-        success: false,
-        error:
-          // This will be propagated to the app.
-          error instanceof Error
-            ? error.message
-            : `An unknown error occurred while processing ${projectName}`,
-        failedProjectName: projectName,
-      });
+      await saveProcessedJob(
+        job,
+        {
+          success: false as const,
+          error:
+            // This will be propagated to the app.
+            error instanceof Error
+              ? error.message
+              : `An unknown error occurred while processing ${projectName}`,
+        },
+        createRedisOptions(ecosystemId, chainId),
+      );
 
       return Promise.reject(error);
     }

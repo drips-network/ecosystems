@@ -4,19 +4,20 @@ import {GetEcosystemsResponseDto, MetadataDto} from './getEcosystemsDto';
 
 export const handleGetEcosystems =
   async (): Promise<GetEcosystemsResponseDto> => {
-    const repository = dataSource.getRepository(Ecosystem);
+    const ecosystemsWithCounts = await dataSource
+      .getRepository(Ecosystem)
+      .createQueryBuilder('ecosystem')
+      .select('ecosystem')
+      .loadRelationCountAndMap('ecosystem.nodeCount', 'ecosystem.nodes', 'node')
+      .getMany();
 
-    const ecosystems = await repository.find({
-      relations: ['nodes'],
-    });
-
-    return ecosystems.map(ecosystem => ({
+    return ecosystemsWithCounts.map(ecosystem => ({
       id: ecosystem.id,
       state: ecosystem.state,
       accountId: ecosystem.accountId,
       name: ecosystem.name,
       description: ecosystem.description,
-      nodeCount: ecosystem.nodes.length,
+      nodeCount: Math.max(0, (ecosystem as any).nodeCount - 1), // Subtract 1 to exclude `root` node.
       metadata: ecosystem.metadata as MetadataDto,
     }));
   };

@@ -10,15 +10,18 @@ const loggingConfigSchema = z.object({
 
 export const rpcConfigSchema = z.record(
   z.enum(SUPPORTED_CHAIN_IDS),
-  z
-    .object({
-      url: z.string().url(),
-      accessToken: z.string().optional(),
-      fallbackUrl: z.string().optional(),
-      fallbackAccessToken: z.string().optional(),
-    })
-    .optional(),
+  z.object({
+    url: z.string().url(),
+    accessToken: z.string().optional(),
+    fallbackUrl: z.string().optional(),
+    fallbackAccessToken: z.string().optional(),
+  }),
 );
+
+export const pinataConfigSchema = z.object({
+  apiKey: z.string(),
+  secretApiKey: z.string(),
+});
 
 export const configSchema = z.object({
   nodeEnv: z.enum(['development', 'test', 'production']).default('development'),
@@ -28,6 +31,10 @@ export const configSchema = z.object({
   redisConnectionString: z.string(),
   gitHubToken: z.string(),
   rpc: rpcConfigSchema,
+  walletPrivateKey: z.string(),
+  shouldSponsorTxs: z.boolean().default(false),
+  txConfirmationInterval: z.number().int().positive().default(15000), // 30 seconds
+  pinata: pinataConfigSchema,
 });
 
 export type LoggingConfig = z.infer<typeof loggingConfigSchema>;

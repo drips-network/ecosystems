@@ -2,8 +2,8 @@ import express from 'express';
 import {createEcosystemRouter} from './features/createEcosystem/api/createEcosystemRouter';
 import {getEcosystemsRouter} from './features/getEcosystems/getEcosystemsRouter';
 import {getEcosystemByIdRouter} from './features/getEcosystemById/getEcosystemByIdRouter';
-import {deployEcosystemRouter} from './features/deployEcosystem/deployEcosystem.router';
 import {errorHandler} from './common/infrastructure/errorHandler';
+import {deployEcosystemRouter} from './features/deployEcosystem/api/deployEcosystemRouter';
 
 export const app = express();
 

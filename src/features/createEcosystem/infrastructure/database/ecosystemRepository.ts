@@ -1,6 +1,5 @@
 import {UUID} from 'crypto';
 import {EntityManager} from 'typeorm';
-import {SuccessfulProcessingResult} from '../redis/loadProcessingResultsFromRedis';
 import unreachable from '../../../../common/application/unreachable';
 import {Ecosystem} from '../../../../common/domain/entities.ts/Ecosystem';
 import {Edge} from '../../../../common/domain/entities.ts/Edge';
@@ -8,6 +7,13 @@ import {Node} from '../../../../common/domain/entities.ts/Node';
 import {ProjectName} from '../../../../common/domain/types';
 import {NewEcosystemRequestDto} from '../../api/createEcosystemDtos';
 import {dataSource} from '../../../../common/infrastructure/datasource';
+import {NotFoundError} from '../../../../common/application/HttpError';
+import {assertIsProjectName} from '../../../../common/application/assertions';
+import {logger} from '../../../../common/infrastructure/logger';
+import {
+  ProjectVerificationResult,
+  SuccessfulProjectVerificationResult,
+} from '../redis/createRedisOptions';
 
 export async function getEcosystemById(
   ecosystemId: UUID,
@@ -18,7 +24,7 @@ export async function getEcosystemById(
   });
 
   if (!ecosystem) {
-    throw new Error(`Ecosystem with id '${ecosystemId}' not found.`);
+    throw new NotFoundError(`Ecosystem with id '${ecosystemId}' not found.`);
   }
 
   return ecosystem;
@@ -26,7 +32,7 @@ export async function getEcosystemById(
 
 export async function saveNodes(
   ecosystem: Ecosystem,
-  successfulResults: SuccessfulProcessingResult[],
+  successfulResults: SuccessfulProjectVerificationResult[],
   manager: EntityManager,
 ) {
   const nodeRepository = manager.getRepository(Node);
@@ -34,6 +40,7 @@ export async function saveNodes(
   const nodes = successfulResults.map(result => {
     const {
       verificationResult: {
+        url,
         repoDriverId,
         verifiedProjectName,
         originalProjectName,
@@ -41,6 +48,7 @@ export async function saveNodes(
     } = result;
 
     return nodeRepository.create({
+      url,
       ecosystem,
       absoluteWeight: 0,
       originalProjectName,
@@ -53,7 +61,7 @@ export async function saveNodes(
 }
 
 export async function saveEdges(
-  successfulResults: SuccessfulProcessingResult[],
+  successfulResults: SuccessfulProjectVerificationResult[],
   ecosystem: Ecosystem,
   nodes: Node[],
   manager: EntityManager,
@@ -66,17 +74,18 @@ export async function saveEdges(
       result.verificationResult.originalProjectName.toLowerCase(), // Lowercase for case-insensitive lookup.
       result.verificationResult.verifiedProjectName,
     ]),
-  ) as Map<ProjectName, string>;
+  );
 
   // Map edges using verified names.
   const edges = successfulResults.flatMap(result =>
     result.edges.map(edge => {
-      const verifiedTarget = projectNameMap.get(
-        edge.target.toLowerCase() as ProjectName,
-      );
-      const verifiedSource = projectNameMap.get(
-        edge.source.toLowerCase() as ProjectName,
-      );
+      const targetName = edge.target.toLowerCase();
+      assertIsProjectName(targetName);
+      const sourceName = edge.source.toLowerCase();
+      assertIsProjectName(sourceName);
+
+      const verifiedTarget = projectNameMap.get(targetName);
+      const verifiedSource = projectNameMap.get(sourceName);
       if (!verifiedTarget) {
         unreachable(
           `Edge references unverified dependency: ${edge.target} from ${result.verificationResult.verifiedProjectName}. ` +
@@ -120,8 +129,8 @@ export async function saveEdges(
       return !existingSet.has(key);
     })
     .map(edge => {
-      const sourceNode = nodeMap.get(edge.source as ProjectName);
-      const targetNode = nodeMap.get(edge.target as ProjectName);
+      const sourceNode = nodeMap.get(edge.source);
+      const targetNode = nodeMap.get(edge.target);
 
       if (!sourceNode || !targetNode) {
         unreachable(
@@ -229,10 +238,12 @@ export const saveEcosystemIfNotExist = async (
     return existingEcosystem;
   }
 
-  const {name, graph, chainId, metadata, ownerAddress} = newEcosystem;
+  const {name, graph, chainId, metadata, ownerAddress, description} =
+    newEcosystem;
   const entity = repository.create({
     name,
     chainId,
+    description,
     ownerAddress,
     id: ecosystemId,
     rawGraph: graph,
@@ -240,7 +251,11 @@ export const saveEcosystemIfNotExist = async (
     state: 'processing_graph',
   });
 
-  return await repository.save(entity);
+  await repository.save(entity);
+
+  logger.info(`Saved ecosystem '${ecosystemId}' in database.`);
+
+  return;
 };
 
 export async function saveError(ecosystemId: UUID, error: string) {
@@ -257,4 +272,8 @@ export async function saveError(ecosystemId: UUID, error: string) {
   ecosystem.error = error;
 
   await repository.save(ecosystem);
+
+  logger.info(
+    `Saved error '${error}' for ecosystem '${ecosystemId}' in database.`,
+  );
 }

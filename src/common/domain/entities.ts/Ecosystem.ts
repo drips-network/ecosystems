@@ -7,12 +7,16 @@ import {
   UpdateDateColumn,
   DeleteDateColumn,
   OneToMany,
+  Check,
 } from 'typeorm';
 import {Node} from './Node';
 import {AccountId} from '../types';
 import {EcosystemState} from '../../infrastructure/stateMachine/ecosystemStateMachine';
 
 @Entity({name: 'Ecosystems'})
+@Check(
+  '(public."Ecosystems"."state" <> \'deployed\' OR public."Ecosystems"."accountId" IS NOT NULL)',
+)
 export class Ecosystem {
   @PrimaryColumn('uuid')
   public id!: UUID;

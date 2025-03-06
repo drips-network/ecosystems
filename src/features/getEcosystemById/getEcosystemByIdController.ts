@@ -1,6 +1,7 @@
 import {Request, Response} from 'express';
 import {handleGetEcosystemById} from './getEcosystemByIdHandler';
 import {getEcosystemByIdRequestSchema} from './getEcosystemByIdDto';
+import {BadRequestError} from '../../common/application/HttpError';
 
 export const getEcosystemByIdController =
   () =>
@@ -11,7 +12,7 @@ export const getEcosystemByIdController =
         .map(issue => `- ${issue.path.join('.')} ${issue.message}`)
         .join('\n');
 
-      throw new Error(`Validation failed:\n${formattedErrors}`);
+      throw new BadRequestError(`Validation failed:\n${formattedErrors}`);
     }
 
     const ecosystem = await handleGetEcosystemById(parsedRequest.data);

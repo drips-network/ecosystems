@@ -1,19 +1,24 @@
 import {gitHub} from '../../../../common/infrastructure/gitHub';
-import {getRepoDriverId} from '../repoDriver/getRepoDriverId';
-import {ProjectName, ChainId} from '../../../../common/domain/types';
-import assertIsProjectName from '../../../../common/application/assertIsProjectName';
+import {ProjectName, ChainId, OxString} from '../../../../common/domain/types';
+import {assertIsProjectName} from '../../../../common/application/assertions';
+import {
+  executeRepoDriverReadMethod,
+  Forge,
+} from '../../../../common/infrastructure/contracts/repoDriver/repoDriver';
+import {hexlify, toUtf8Bytes} from 'ethers';
 
 export type SuccessfulNodeVerificationResult = {
   success: true;
-  repoDriverId: string | null; // `null` for the root node.
+  url: string;
   verifiedProjectName: ProjectName;
   originalProjectName: ProjectName;
+  repoDriverId: string;
 };
 
 export type FailedNodeVerificationResult = {
   success: false;
+  originalProjectName: ProjectName;
   error: string;
-  failedProjectName: ProjectName;
 };
 
 export type NodeVerificationResult =
@@ -32,9 +37,10 @@ export default async function verifyNode({
   if (projectName === 'root') {
     return {
       success: true,
-      repoDriverId: null,
       verifiedProjectName: 'root',
       originalProjectName: 'root',
+      repoDriverId: 'N/A',
+      url: 'N/A',
     };
   }
 
@@ -65,27 +71,41 @@ export default async function verifyNode({
     const verifiedName = `${actualOwner}/${actualRepo}`;
     assertIsProjectName(verifiedName);
 
+    const url = `https://github.com/${actualOwner}/${actualRepo}`;
+
     // If the project was renamed, consider it a failure.
     if (projectName.toLowerCase() !== verifiedName.toLowerCase()) {
       return {
         success: false,
-        failedProjectName: projectName,
+        originalProjectName: projectName,
         error: `${projectName} was renamed to ${verifiedName}`,
       };
     }
 
+    const repoDriverId = (
+      await executeRepoDriverReadMethod({
+        functionName: 'calcAccountId',
+        args: [
+          Forge.GitHub,
+          hexlify(toUtf8Bytes(`${verifiedName}`)) as OxString,
+        ],
+        chainId: chainId,
+      })
+    ).toString();
+
     return {
       success: true,
+      url,
       originalProjectName: projectName,
       verifiedProjectName: verifiedName,
-      repoDriverId: await getRepoDriverId(chainId, projectName),
+      repoDriverId,
     };
   } catch (error) {
     // If the project was not found, consider it a failure, but a valid result.
     if ((error as {status?: number}).status === 404) {
       return {
         success: false,
-        failedProjectName: projectName,
+        originalProjectName: projectName,
         error: `${projectName} not found.`,
       };
     }

@@ -1,13 +1,22 @@
 import {UUID} from 'crypto';
-import {ProjectVerificationJobData, EcosystemQueue} from './createQueue';
-import {GraphDto} from '../../api/createEcosystemDtos';
+import {EdgeDto, GraphDto, NodeDto} from '../../api/createEcosystemDtos';
 import {ChainId} from '../../../../common/domain/types';
+import BeeQueue from 'bee-queue';
+import {logger} from '../../../../common/infrastructure/logger';
+
+export type ProjectVerificationJobData = {
+  node: NodeDto;
+  edges: EdgeDto[];
+  chainId: ChainId;
+  ecosystemId: UUID;
+  totalJobs: number;
+};
 
 export const enqueueProjectVerificationJobs = async (
+  queue: BeeQueue<ProjectVerificationJobData>,
+  graph: GraphDto,
   chainId: ChainId,
   ecosystemId: UUID,
-  queue: EcosystemQueue,
-  graph: GraphDto,
 ) => {
   const {nodes, edges} = graph;
 
@@ -34,4 +43,8 @@ export const enqueueProjectVerificationJobs = async (
   );
 
   await queue.saveAll(jobs);
+
+  logger.info(
+    `Enqueued ${jobs.length} project verification jobs for ecosystem '${ecosystemId}'.`,
+  );
 };

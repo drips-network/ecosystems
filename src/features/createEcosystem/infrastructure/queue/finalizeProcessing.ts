@@ -1,28 +1,31 @@
 import {UUID} from 'crypto';
 import {logger} from '../../../../common/infrastructure/logger';
 import transitionEcosystemState from '../../../../common/infrastructure/stateMachine/transitionEcosystemState';
-import deleteRedisData from '../redis/deleteRedisData';
-import loadProcessingResultsFromRedis from '../redis/loadProcessingResultsFromRedis';
-import {EcosystemQueue} from './createQueue';
 import {ChainId} from '../../../../common/domain/types';
 import saveGraph from '../../application/saveGraph';
 import {saveError} from '../database/ecosystemRepository';
+import BeeQueue from 'bee-queue';
+import {ProjectVerificationJobData} from './enqueueProjectVerificationJobs';
+import deleteBqRedisData from '../redis/deleteBqRedisData';
+import createRedisOptions from '../redis/createRedisOptions';
+import {loadProjectVerificationResults} from '../redis/loadProjectVerificationResults';
 
 export default async function finalizeProcessing(
   ecosystemId: UUID,
   chainId: ChainId,
   totalJobs: number,
-  queue: EcosystemQueue,
+  queue: BeeQueue<ProjectVerificationJobData>,
 ) {
+  logger.info(`Finalizing processing for ecosystem '${ecosystemId}'...`);
+
   try {
-    const {successful, failed} = await loadProcessingResultsFromRedis(
-      ecosystemId,
-      chainId,
+    const {successful, failed} = await loadProjectVerificationResults(
+      createRedisOptions(ecosystemId, chainId).keys,
       totalJobs,
     );
 
     if (failed.length) {
-      const error = JSON.stringify(failed.map(j => j.verificationResult.error));
+      const error = JSON.stringify(failed.map(j => j.error));
 
       logger.warn(
         `Queue '${queue.name}' processing completed. ${failed.length} project verification(s) failed. Errors: ${error}`,
@@ -37,8 +40,7 @@ export default async function finalizeProcessing(
 
       await saveGraph(ecosystemId, successful);
       await transitionEcosystemState(ecosystemId, 'PROCESSING_COMPLETED');
-      await queue.destroy();
-      await deleteRedisData(ecosystemId, chainId);
+      await deleteBqRedisData(queue, ecosystemId, chainId);
     }
   } catch (error) {
     logger.error(`Error during finalization (queue '${queue.name}'):`, error);
