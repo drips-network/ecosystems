@@ -4,19 +4,7 @@ import {app} from './app';
 import {exit} from 'process';
 import {config} from './config/configLoader';
 import {launchQueueDashboard} from './common/application/launchQueueDashboard';
-
-const launchDevQueueDashboard = async () => {
-  if (config.nodeEnv === 'development') {
-    logger.info(
-      `Starting queue dashboard on http://localhost:${config.port}/arena`,
-    );
-
-    await launchQueueDashboard(app);
-    setInterval(async () => {
-      await launchQueueDashboard(app);
-    }, 6000);
-  }
-};
+import runMigrations from './common/infrastructure/migrations';
 
 dataSource
   .initialize()
@@ -25,6 +13,8 @@ dataSource
     logger.info(`Config: ${JSON.stringify(config, null, 2)}`);
 
     await launchDevQueueDashboard();
+
+    await runMigrations();
 
     app.listen(config.port, () => {
       logger.info(
@@ -36,3 +26,16 @@ dataSource
     logger.error('Database connection failed:', error);
     exit(1);
   });
+
+async function launchDevQueueDashboard() {
+  if (config.nodeEnv === 'development') {
+    logger.info(
+      `Starting queue dashboard on http://localhost:${config.port}/arena`,
+    );
+
+    await launchQueueDashboard(app);
+    setInterval(async () => {
+      await launchQueueDashboard(app);
+    }, 6000);
+  }
+}
