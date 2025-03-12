@@ -105,8 +105,14 @@ function extractSubListReceivers(
             weight,
             type: 'sub-list',
           });
+        } else {
+          unreachable('Invalid number of topics in the `CreatedSplits` event.');
         }
       });
+    } else {
+      logger.warn(
+        `No 'CreatedSplits' events found in the receipt logs of tx '${receipt.hash}' for ecosystem '${ecosystemId}'.`,
+      );
     }
   }
 

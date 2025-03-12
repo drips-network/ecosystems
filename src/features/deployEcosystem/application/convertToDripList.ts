@@ -5,6 +5,7 @@ import unreachable from '../../../common/application/unreachable';
 import {AccountId, ChainId, OxString} from '../../../common/domain/types';
 import calculateRandomSalt from '../infrastructure/blockchain/calculateRandomSalt';
 import {executeNftDriverReadMethod} from '../../../common/infrastructure/contracts/nftDriver/nftDriver';
+import getWallet from '../../../common/infrastructure/contracts/getWallet';
 
 type DripList = {
   projectReceivers: ProjectReceiver[];
@@ -266,10 +267,11 @@ async function normalizeDripList(
   // Note: The `normalizedWeight` property is added for root-level allocation only.
 
   const salt = calculateRandomSalt();
+  const deployerAddress = getWallet(chainId).address as OxString;
   const dripListId = (
     await executeNftDriverReadMethod({
       functionName: 'calcTokenIdWithSalt',
-      args: [ownerAddress, salt],
+      args: [deployerAddress, salt],
       chainId,
     })
   ).toString();

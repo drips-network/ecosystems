@@ -8,6 +8,7 @@ import {populateDripListCreationTxs} from './populateTransactions';
 import {pinDripListMetadata} from '../ipfs/metadata';
 import unreachable from '../../../../common/application/unreachable';
 import {NormalizedDripList} from '../../application/convertToDripList';
+import {ProjectReceiver, SubListReceiver} from '../../application/types';
 
 type Params = {
   chainId: ChainId;
@@ -33,12 +34,17 @@ export default async function createMainIdentity({
     unreachable('All results must have the same parent Drip List.');
   }
 
-  const receivers = [
-    ...dripList.projectReceivers,
-    ...successfulSubListCreationResults.flatMap(
-      result => result.batchSubListReceivers,
-    ),
-  ];
+  const receivers = [...dripList.projectReceivers] as (
+    | ProjectReceiver
+    | SubListReceiver
+  )[];
+  if (successfulSubListCreationResults.length) {
+    receivers.push(
+      ...successfulSubListCreationResults.flatMap(
+        result => result.batchSubListReceivers,
+      ),
+    );
+  }
 
   const ipfsHash = await pinDripListMetadata(
     ecosystemId,

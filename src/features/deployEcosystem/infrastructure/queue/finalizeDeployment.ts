@@ -63,6 +63,7 @@ export async function finalizeDeployment({
         txHash,
         ecosystemId,
         chainId,
+        dripList.accountId,
         ownerAddress,
       );
       await transitionEcosystemState(ecosystemId, 'DEPLOYMENT_COMPLETED');
@@ -105,6 +106,7 @@ export async function deployEcosystem({
       txHash,
       ecosystemId,
       chainId,
+      dripList.accountId,
       ownerAddress,
     );
     await transitionEcosystemState(ecosystemId, 'DEPLOYMENT_COMPLETED');

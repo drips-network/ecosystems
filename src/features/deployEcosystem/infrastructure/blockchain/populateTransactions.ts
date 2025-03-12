@@ -21,6 +21,7 @@ import {executeDripsReadMethod} from '../../../../common/infrastructure/contract
 import {populateImmutableSplitsDriverWriteTx} from '../../../../common/infrastructure/contracts/immutableSplits/immutableSplits';
 import {SubList} from '../../application/batchSubLists';
 import {UUID} from 'crypto';
+import getWallet from '../../../../common/infrastructure/contracts/getWallet';
 
 export async function populateDripListCreationTxs(
   listId: string,
@@ -30,11 +31,13 @@ export async function populateDripListCreationTxs(
   chainId: ChainId,
   receivers: Receiver[],
 ) {
+  const deployerAddress = getWallet(chainId).address as OxString;
+
   const dripListCreationTx = await populateNftDriverWriteTx({
     functionName: 'safeMintWithSalt',
     args: [
       toBigInt(salt),
-      ownerAddress,
+      deployerAddress,
       [
         {
           key: USER_METADATA_KEY,
@@ -53,9 +56,16 @@ export async function populateDripListCreationTxs(
     chainId,
   });
 
+  const transferOwnershipTx = await populateNftDriverWriteTx({
+    functionName: 'safeTransferFrom',
+    args: [deployerAddress, ownerAddress, toBigInt(listId)],
+    chainId,
+  });
+
   return [
     convertToCallerCall(dripListCreationTx),
     convertToCallerCall(setDripListSplitsTx),
+    convertToCallerCall(transferOwnershipTx),
   ];
 }
 

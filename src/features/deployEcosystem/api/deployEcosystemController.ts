@@ -26,7 +26,7 @@ export const deployEcosystemController =
     const queue = await handleDeployEcosystem(parsedRequest.data);
 
     logger.info(
-      `Ecosystem deployment initiated successfully. Transactions queue: '${queue}'.`,
+      `Ecosystem deployment initiated successfully.${queue ? ` Transactions queue: '${queue}'` : ''}.`,
     );
 
     res.status(200).json({

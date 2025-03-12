@@ -28,6 +28,11 @@ export async function enqueueJobs({
   ownerAddress,
   subListBatches,
 }: Params) {
+  const totalTxs = subListBatches.reduce(
+    (total, batch) => total + batch.length,
+    0,
+  );
+
   const jobs = subListBatches
     .flatMap(subLists => subLists)
     .map(r =>
@@ -37,7 +42,7 @@ export async function enqueueJobs({
           subList: r,
           ownerAddress,
           ecosystemId,
-          totalTxs: subListBatches.length,
+          totalTxs,
         })
         .retries(0),
     );
