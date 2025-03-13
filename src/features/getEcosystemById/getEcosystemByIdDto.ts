@@ -40,6 +40,11 @@ const graphSchema = z.object({
   edges: z.array(edgeSchema),
 });
 
+const emojiAvatarSchema = z.object({
+  type: z.literal('emoji'),
+  emoji: z.string(),
+});
+
 const getEcosystemByIdResponseSchema = z.object({
   id: z.string(),
   state: z.enum(ECOSYSTEM_STATES),
@@ -48,6 +53,7 @@ const getEcosystemByIdResponseSchema = z.object({
   description: z.string().nullable().optional(),
   metadata: metadataSchema,
   graph: graphSchema,
+  avatar: emojiAvatarSchema,
 });
 
 export type GetEcosystemByIdRequestDto = z.infer<

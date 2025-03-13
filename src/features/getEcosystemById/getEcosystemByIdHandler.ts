@@ -20,6 +20,7 @@ export const handleGetEcosystemById = async (
     name: ecosystem.name,
     description: ecosystem.description,
     metadata: ecosystem.metadata as GetEcosystemByIdResponseDto['metadata'],
+    avatar: ecosystem.avatar,
     graph: {
       nodes: ecosystem.nodes.map(node => ({
         projectAccountId: node.projectAccountId,

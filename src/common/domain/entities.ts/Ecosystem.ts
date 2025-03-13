@@ -13,6 +13,11 @@ import {Node} from './Node';
 import {AccountId} from '../types';
 import {EcosystemState} from '../../infrastructure/stateMachine/ecosystemStateMachine';
 
+type EmojiAvatar = {
+  type: 'emoji';
+  emoji: string;
+};
+
 @Entity({name: 'Ecosystems'})
 @Check(
   '(public."Ecosystems"."state" <> \'deployed\' OR public."Ecosystems"."accountId" IS NOT NULL)',
@@ -50,6 +55,9 @@ export class Ecosystem {
 
   @OneToMany(() => Node, node => node.ecosystem)
   public nodes!: Node[];
+
+  @Column({type: 'json'})
+  public avatar!: EmojiAvatar;
 
   @CreateDateColumn({name: 'createdAt'})
   public createdAt!: Date;

@@ -16,6 +16,7 @@ export const handleGetEcosystems =
       state: ecosystem.state,
       accountId: ecosystem.accountId,
       name: ecosystem.name,
+      avatar: ecosystem.avatar,
       description: ecosystem.description,
       nodeCount: Math.max(0, (ecosystem as any).nodeCount - 1), // Subtract 1 to exclude `root` node.
       metadata: ecosystem.metadata as MetadataDto,

@@ -13,6 +13,11 @@ const metadataSchema = z.array(
   }),
 );
 
+const emojiAvatarSchema = z.object({
+  type: z.literal('emoji'),
+  emoji: z.string(),
+});
+
 const ecosystemSchema = z.object({
   id: z.string(),
   accountId: z.string().nullable(),
@@ -21,6 +26,7 @@ const ecosystemSchema = z.object({
   nodeCount: z.number().nullable(),
   metadata: metadataSchema,
   state: z.enum(ECOSYSTEM_STATES),
+  avatar: emojiAvatarSchema,
 });
 
 const getEcosystemsResponseSchema = z.array(ecosystemSchema);
