@@ -28,7 +28,7 @@ async function isTxConfirmed(
 
   if (!receipt) {
     logger.info(`Transaction '${txHash}' not mined yet.`);
-    return false; // Transaction not mined yet.
+    return false;
   }
 
   const currentBlock = await provider.getBlockNumber();

@@ -28,12 +28,14 @@ export const handleDeployEcosystem = async ({
 
   // If there are no sub-lists, deploy the ecosystem directly. There is no need to enqueue jobs.
   if (dripList.subLists.length === 0) {
-    return deployEcosystem({
+    void deployEcosystem({
       chainId,
       dripList,
       ecosystemId: id,
       ownerAddress,
     });
+
+    return;
   }
 
   const subListBatches = batchSubLists(dripList);
