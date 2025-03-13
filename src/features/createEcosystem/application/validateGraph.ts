@@ -112,12 +112,22 @@ const checkForDuplicateNodes = (graph: GraphDto): string[] => {
   const {nodes} = graph;
   const errors: string[] = [];
 
-  const nodeSet = new Set();
+  // Create a map to track nodes using a lowercase version of the project name.
+  // The map value is an array that stores all occurrences of the project name with their original casing.
+  const nodeMap = new Map<string, string[]>();
+
   nodes.forEach(node => {
-    if (nodeSet.has(node.projectName)) {
-      errors.push(`Duplicate node found: ${node.projectName}.`);
+    const projectNameLower = node.projectName.toLowerCase(); // Normalize to lowercase for comparison.
+    const existingNames = nodeMap.get(projectNameLower) || [];
+    existingNames.push(node.projectName);
+    nodeMap.set(projectNameLower, existingNames);
+  });
+
+  // Iterate through the map and add an error message if duplicates are found.
+  nodeMap.forEach(names => {
+    if (names.length > 1) {
+      errors.push(`Duplicate node found: ${names.join(' and ')}.`);
     }
-    nodeSet.add(node.projectName);
   });
 
   return errors;
