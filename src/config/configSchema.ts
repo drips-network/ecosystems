@@ -24,7 +24,6 @@ export const pinataConfigSchema = z.object({
 });
 
 export const configSchema = z.object({
-  nodeEnv: z.enum(['development', 'test', 'production']).default('development'),
   port: z.number().int().positive().default(3000),
   databaseConnectionString: z.string(),
   logging: loggingConfigSchema,
@@ -35,6 +34,7 @@ export const configSchema = z.object({
   shouldSponsorTxs: z.boolean().default(false),
   txConfirmationInterval: z.number().int().positive().default(15000), // 30 seconds
   pinata: pinataConfigSchema,
+  shouldLoadQueueUI: z.boolean().default(false),
 });
 
 export type LoggingConfig = z.infer<typeof loggingConfigSchema>;

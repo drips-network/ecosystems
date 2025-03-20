@@ -9,5 +9,5 @@ export const dataSource = new DataSource({
   url: config.databaseConnectionString,
   entities: [Ecosystem, Node, Edge],
   migrationsTableName: '_Migrations',
-  migrations: ['build/src/common/infrastructure/migrations/*.js'],
+  migrations: ['build/src/common/infrastructure/migrations/*.js'], // Migrations always run from the build!
 });

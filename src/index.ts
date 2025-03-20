@@ -4,7 +4,7 @@ import {app} from './app';
 import {exit} from 'process';
 import {config} from './config/configLoader';
 import {launchQueueDashboard} from './common/application/launchQueueDashboard';
-import runMigrations from './common/infrastructure/migrations';
+import runMigrations from './common/infrastructure/runMigrations';
 
 dataSource
   .initialize()
@@ -14,12 +14,8 @@ dataSource
 
     await launchDevQueueDashboard();
 
-    await runMigrations();
-
     app.listen(config.port, () => {
-      logger.info(
-        `Server is running in ${config.nodeEnv} mode on http://localhost:${config.port} 🚀`,
-      );
+      logger.info(`Server is running on 'http://localhost:${config.port}' 🚀`);
     });
   })
   .catch(error => {
@@ -28,7 +24,7 @@ dataSource
   });
 
 async function launchDevQueueDashboard() {
-  if (config.nodeEnv === 'development') {
+  if (config.shouldLoadQueueUI) {
     logger.info(
       `Starting queue dashboard on http://localhost:${config.port}/arena`,
     );

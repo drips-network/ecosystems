@@ -11,11 +11,12 @@ export const createEcosystemController =
 
     const parsedPayload = newEcosystemRequestSchema.safeParse(req.body);
     if (!parsedPayload.success) {
-      const formattedErrors = parsedPayload.error.issues
-        .map(issue => `- ${issue.path.join('.')} ${issue.message}`)
-        .join('\n');
+      const formattedErrors = parsedPayload.error.issues.map(issue => ({
+        field: issue.path.join('.'),
+        message: issue.message,
+      }));
 
-      throw new BadRequestError(`Validation failed:\n${formattedErrors}`);
+      throw new BadRequestError('Validation failed', formattedErrors);
     }
 
     const ecosystemId = await handleCreateEcosystem(req.body);

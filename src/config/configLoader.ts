@@ -7,7 +7,7 @@ dotenvExpand.expand(dotenv.config());
 
 function loadConfig(): Config {
   const config = {
-    env: process.env.NODE_ENV,
+    port: process.env.PORT ? parseInt(process.env.PORT, 10) : undefined,
     databaseConnectionString: process.env.DB_CONNECTION_STRING,
     logging: {
       level: process.env.LOG_LEVEL,
@@ -27,6 +27,7 @@ function loadConfig(): Config {
       apiKey: process.env.PINATA_API_KEY,
       secretApiKey: process.env.PINATA_SECRET_API_KEY,
     },
+    shouldLoadQueueUI: process.env.SHOULD_LOAD_QUEUE_UI === 'true',
   };
 
   try {

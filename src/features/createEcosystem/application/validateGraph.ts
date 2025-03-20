@@ -255,8 +255,6 @@ export const validateGraph = (graph: GraphDto) => {
   const errors = validators.flatMap(validator => validator(graph));
 
   if (errors.length > 0) {
-    throw new BadRequestError(
-      `Ecosystem graph is not valid:\n${errors.join('\n')}`,
-    );
+    throw new BadRequestError('Ecosystem graph is not valid', errors);
   }
 };

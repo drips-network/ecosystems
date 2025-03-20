@@ -18,7 +18,6 @@
     "typeorm": "typeorm-ts-node-commonjs",
     "typeorm:run": "typeorm-ts-node-commonjs migration:run -d src/common/infrastructure/dataSource.ts",
     "typeorm:generate": "typeorm-ts-node-commonjs migration:generate src/common/infrastructure/migrations/$npm_config_name -d src/common/infrastructure/dataSource.ts",
-    "typeorm:migrate": "typeorm-ts-node-commonjs migration:run -d src/common/infrastructure/dataSource.ts",
     "typeorm:revert": "typeorm-ts-node-commonjs migration:revert -d src/common/infrastructure/dataSource.ts",
     "typeorm:log": "typeorm-ts-node-commonjs schema:log -d src/common/infrastructure/dataSource.ts"
   },

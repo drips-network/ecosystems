@@ -1,8 +1,11 @@
 export class HttpError extends Error {
   public statusCode: number;
+  public details?: unknown;
 
-  constructor(message: string, statusCode: number) {
+  constructor(message: string, statusCode: number, details?: unknown) {
     super(message);
+
+    this.details = details;
     this.statusCode = statusCode;
   }
 }
@@ -20,8 +23,8 @@ export class ForbiddenError extends HttpError {
 }
 
 export class BadRequestError extends HttpError {
-  constructor(message = 'Bad Request') {
-    super(message, 400);
+  constructor(message = 'Bad Request', details?: unknown) {
+    super(message, 400, details);
   }
 }
 
