@@ -7,8 +7,6 @@ import {BadRequestError} from '../../../common/application/HttpError';
 export const createEcosystemController =
   () =>
   async (req: Request, res: Response): Promise<void> => {
-    logger.info('Received request to create a new ecosystem.');
-
     const parsedPayload = newEcosystemRequestSchema.safeParse(req.body);
     if (!parsedPayload.success) {
       const formattedErrors = parsedPayload.error.issues.map(issue => ({
@@ -18,6 +16,8 @@ export const createEcosystemController =
 
       throw new BadRequestError('Validation failed', formattedErrors);
     }
+
+    logger.info('Creating a new ecosystem...');
 
     const ecosystemId = await handleCreateEcosystem(req.body);
 

@@ -1,5 +1,10 @@
 import {gitHub} from '../../../../common/infrastructure/gitHub';
-import {ProjectName, ChainId, OxString} from '../../../../common/domain/types';
+import {
+  ProjectName,
+  ChainId,
+  OxString,
+  AccountId,
+} from '../../../../common/domain/types';
 import {assertIsProjectName} from '../../../../common/application/assertions';
 import {
   executeRepoDriverReadMethod,
@@ -12,7 +17,7 @@ export type SuccessfulNodeVerificationResult = {
   url: string;
   verifiedProjectName: ProjectName;
   originalProjectName: ProjectName;
-  repoDriverId: string;
+  repoDriverId: AccountId;
 };
 
 export type FailedNodeVerificationResult = {
@@ -91,7 +96,7 @@ export default async function verifyNode({
         ],
         chainId: chainId,
       })
-    ).toString();
+    ).toString() as AccountId;
 
     return {
       success: true,

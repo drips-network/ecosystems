@@ -10,7 +10,7 @@ export const SUPPORTED_CHAIN_IDS = [
 ] as const;
 export type ChainId = (typeof SUPPORTED_CHAIN_IDS)[number];
 
-export type AccountId = string;
+export type AccountId = `${bigint}` | 'N/A'; // N/A is used for the root node.
 export type ProjectName = `${string}/${string}` | 'root';
 export type OxString = `0x${string}`;
 export type IpfsHash = string;

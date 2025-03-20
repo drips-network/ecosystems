@@ -31,10 +31,14 @@ export const handleGetEcosystemById = async (
           node.projectName === 'root' ? 'root' : node.projectName.split('/')[1],
       })),
       edges: edges.map(edge => ({
-        source: edge.sourceNode.projectAccountId,
+        source:
+          edge.sourceNode.projectName === 'root'
+            ? 'root'
+            : edge.sourceNode.projectAccountId,
         target: edge.targetNode.projectAccountId,
         weight: edge.weight,
       })),
     },
+    color: ecosystem.color,
   };
 };

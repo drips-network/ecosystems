@@ -1,6 +1,9 @@
 import {z} from 'zod';
 import {ChainId, SUPPORTED_CHAIN_IDS} from '../../../common/domain/types';
-import {addressSchema} from '../../../common/application/schemas';
+import {
+  addressSchema,
+  hexColorSchema,
+} from '../../../common/application/schemas';
 
 const metadataSchema = z.array(
   z.object({
@@ -52,6 +55,7 @@ export const newEcosystemRequestSchema = z.object({
   description: z.string().min(1).max(1000).optional(),
   chainId: z.enum(Object.values(SUPPORTED_CHAIN_IDS) as [ChainId]),
   avatar: emojiAvatarSchema,
+  color: hexColorSchema,
 });
 
 export type NodeDto = z.infer<typeof nodeSchema>;

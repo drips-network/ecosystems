@@ -1,5 +1,6 @@
 import {z} from 'zod';
 import {ECOSYSTEM_STATES} from '../../common/infrastructure/stateMachine/ecosystemStateMachine';
+import {hexColorSchema} from '../../common/application/schemas';
 
 export const getEcosystemByIdRequestSchema = z.object({
   id: z.string().uuid(),
@@ -54,6 +55,7 @@ const getEcosystemByIdResponseSchema = z.object({
   metadata: metadataSchema,
   graph: graphSchema,
   avatar: emojiAvatarSchema,
+  color: hexColorSchema,
 });
 
 export type GetEcosystemByIdRequestDto = z.infer<

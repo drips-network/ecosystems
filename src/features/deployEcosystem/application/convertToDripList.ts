@@ -274,7 +274,7 @@ async function normalizeDripList(
       args: [deployerAddress, salt],
       chainId,
     })
-  ).toString();
+  ).toString() as AccountId;
 
   return {
     salt,

@@ -67,4 +67,7 @@ export class Ecosystem {
 
   @DeleteDateColumn({name: 'deletedAt'})
   public deletedAt: Date | undefined;
+
+  @Column({type: 'varchar', length: 9})
+  color!: string;
 }
