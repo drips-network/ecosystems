@@ -4,13 +4,11 @@ import {app} from './app';
 import {exit} from 'process';
 import {config} from './config/configLoader';
 import {launchQueueDashboard} from './common/application/launchQueueDashboard';
-import runMigrations from './common/infrastructure/runMigrations';
 
 dataSource
   .initialize()
   .then(async () => {
     logger.info('Database connected successfully.');
-    logger.info(`Config: ${JSON.stringify(config, null, 2)}`);
 
     await launchDevQueueDashboard();
 
