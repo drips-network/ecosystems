@@ -1,10 +1,9 @@
 import {parse} from 'pg-connection-string';
 import pgtools from 'pgtools';
-import {config as dbConfig} from '../../config/configLoader';
 import {exit} from 'process';
 
 // Parse the connection string into its components.
-const config = parse(dbConfig.databaseConnectionString);
+const config = parse(process.env.DB_CONNECTION_STRING as string);
 
 // Extract the database name.
 const dbName = config.database;
