@@ -8,11 +8,12 @@ export const getEcosystemByIdController =
   async (req: Request, res: Response): Promise<void> => {
     const parsedRequest = getEcosystemByIdRequestSchema.safeParse(req.params);
     if (!parsedRequest.success) {
-      const formattedErrors = parsedRequest.error.issues
-        .map(issue => `- ${issue.path.join('.')} ${issue.message}`)
-        .join('\n');
+      const formattedErrors = parsedRequest.error.issues.map(issue => ({
+        field: issue.path.join('.'),
+        message: issue.message,
+      }));
 
-      throw new BadRequestError(`Validation failed:\n${formattedErrors}`);
+      throw new BadRequestError('Validation failed', formattedErrors);
     }
 
     const ecosystem = await handleGetEcosystemById(parsedRequest.data);

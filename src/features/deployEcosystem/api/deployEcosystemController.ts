@@ -12,11 +12,12 @@ export const deployEcosystemController =
       body: req.body,
     });
     if (!parsedRequest.success) {
-      const formattedErrors = parsedRequest.error.issues
-        .map(issue => `- ${issue.path.join('.')} ${issue.message}`)
-        .join('\n');
+      const formattedErrors = parsedRequest.error.issues.map(issue => ({
+        field: issue.path.join('.'),
+        message: issue.message,
+      }));
 
-      throw new BadRequestError(`Validation failed:\n${formattedErrors}`);
+      throw new BadRequestError('Validation failed', formattedErrors);
     }
 
     logger.info(
