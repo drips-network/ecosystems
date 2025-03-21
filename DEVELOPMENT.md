@@ -2,9 +2,7 @@
 
 ## Running Migrations
 
-Migrations run from the compiled JavaScript code, not directly from TypeScript files. Migrations do not run automatically.
-
-To run the migrations:
+Migrations do not run automatically. To run the migrations:
 
 1. Compile the TypeScript code: `npm run compile`
 

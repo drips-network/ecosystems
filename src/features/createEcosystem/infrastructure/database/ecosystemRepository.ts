@@ -238,10 +238,19 @@ export const saveEcosystemIfNotExist = async (
     return existingEcosystem;
   }
 
-  const {name, graph, chainId, metadata, ownerAddress, description, avatar} =
-    newEcosystem;
+  const {
+    name,
+    graph,
+    chainId,
+    metadata,
+    ownerAddress,
+    description,
+    avatar,
+    color,
+  } = newEcosystem;
   const entity = repository.create({
     name,
+    color,
     avatar,
     chainId,
     description,

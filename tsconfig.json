@@ -12,5 +12,5 @@
     "moduleResolution": "node16",
     "module": "node16"
   },
-  "include": ["src/**/*.ts", "test/**/*.ts"]
+  "include": ["src/**/*.ts", "test/**/*.ts", "scripts/**/*.ts"]
 }
