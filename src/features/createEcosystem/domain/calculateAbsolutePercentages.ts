@@ -1,4 +1,3 @@
-import {assertIsProjectName} from '../../../common/application/assertions';
 import unreachable from '../../../common/application/unreachable';
 import {Edge} from '../../../common/domain/entities.ts/Edge';
 import {Node} from '../../../common/domain/entities.ts/Node';
@@ -10,8 +9,8 @@ export async function calculateAbsolutePercentages(
 ) {
   type ComputedNode = {
     node: Node;
-    incomingEdges: Array<{source: string; weight: number}>;
-    outgoingEdges: Array<{target: string; weight: number}>;
+    incomingEdges: Array<{source: ProjectName; weight: number}>;
+    outgoingEdges: Array<{target: ProjectName; weight: number}>;
     absoluteWeight: number;
     inDegree: number;
   };
@@ -79,7 +78,6 @@ export async function calculateAbsolutePercentages(
 
     // For each outgoing edge, distribute the specified weight percentage
     for (const outEdge of current.outgoingEdges) {
-      assertIsProjectName(outEdge.target);
       const targetEntry = computedGraph.get(outEdge.target)!;
 
       // Pass the weight to the child
