@@ -15,8 +15,8 @@
     "start": "node build/src/index.js",
     "check": "tsc --noEmit",
     "create:db": "ts-node src/common/infrastructure/createDatabase.ts",
+    "run-migrations": "node build/scripts/runMigrations.js",
     "typeorm": "typeorm-ts-node-commonjs",
-    "typeorm:run": "node build/scripts/runMigrations.js",
     "typeorm:generate": "typeorm-ts-node-commonjs migration:generate src/common/infrastructure/migrations/$npm_config_name -d src/common/infrastructure/dataSource.ts",
     "typeorm:revert": "typeorm-ts-node-commonjs migration:revert -d src/common/infrastructure/dataSource.ts",
     "typeorm:log": "typeorm-ts-node-commonjs schema:log -d src/common/infrastructure/dataSource.ts"
