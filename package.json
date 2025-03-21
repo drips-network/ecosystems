@@ -13,7 +13,7 @@
     "posttest": "npm run lint",
     "dev": "ts-node src/index.ts",
     "start": "node build/src/index.js",
-    "start:with-migrations": "npm run typeorm:run && npm run start",
+    "start:with-migrations": "typeorm migration:run -d build/src/common/infrastructure/dataSource.js",
     "check": "tsc --noEmit",
     "create:db": "ts-node src/common/infrastructure/createDatabase.ts",
     "typeorm": "typeorm-ts-node-commonjs",
