@@ -35,10 +35,14 @@ function loadConfig(): Config {
   } catch (error) {
     if (error instanceof z.ZodError) {
       const details = error.errors
-        .map(err => `${err.path.join('.')}: ${err.message}`)
+        .map(err => {
+          const path = err.path.join('.');
+          const message = err.message;
+          return `- ${path ? `'${path}': ` : ''}${message}`;
+        })
         .join('\n');
 
-      throw new Error(`Invalid configuration:\n${details}`);
+      throw new Error(`Invalid configuration:\n\n${details}\n`);
     }
 
     throw error;
