@@ -13,19 +13,23 @@ export default async function runMigrations() {
 
   await dataSource.initialize();
 
-  const migrations = await dataSource.runMigrations();
+  try {
+    const migrations = await dataSource.runMigrations();
 
-  if (migrations.length > 0) {
-    console.log(`Updated database with ${migrations.length} migrations:`);
-    migrations.forEach(migration => {
-      console.log(`- ${migration.name}`);
-    });
-  } else if (!checkMigrationsExist()) {
-    logger.warn(
-      'No migrations were applied. Did you forget to run "npm run compile"?',
-    );
-  } else {
-    console.log('The database is up to date. No migrations were applied.');
+    if (migrations.length > 0) {
+      console.log(`Updated database with ${migrations.length} migrations:`);
+      migrations.forEach(migration => {
+        console.log(`- ${migration.name}`);
+      });
+    } else if (!checkMigrationsExist()) {
+      logger.warn(
+        'No migrations were applied. Did you forget to run "npm run compile"?',
+      );
+    } else {
+      console.log('The database is up to date. No migrations were applied.');
+    }
+  } finally {
+    await dataSource.destroy();
   }
 }
 
