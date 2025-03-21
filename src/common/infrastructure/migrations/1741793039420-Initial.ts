@@ -8,7 +8,7 @@ export class Initial1741793039420 implements MigrationInterface {
       'CREATE TABLE "Edges" ("sourceNodeId" uuid NOT NULL, "targetNodeId" uuid NOT NULL, "ecosystemId" uuid NOT NULL, "weight" numeric NOT NULL, "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "deletedAt" TIMESTAMP, CONSTRAINT "PK_3f643c2217e5595ced195e5894b" PRIMARY KEY ("sourceNodeId", "targetNodeId", "ecosystemId"))',
     );
     await queryRunner.query(
-      'CREATE TABLE "Nodes" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "projectName" character varying(200) NOT NULL, "url" character varying(200), "projectAccountId" character varying(200), "originalProjectName" character varying(200) NOT NULL, "absoluteWeight" numeric NOT NULL, "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "deletedAt" TIMESTAMP, "ecosystemId" uuid, CONSTRAINT "PK_b547a86fc0c87c1bf14c54a9095" PRIMARY KEY ("id"))',
+      'CREATE TABLE "Nodes" ("id" uuid NOT NULL, "projectName" character varying(200) NOT NULL, "url" character varying(200), "projectAccountId" character varying(200), "originalProjectName" character varying(200) NOT NULL, "absoluteWeight" numeric NOT NULL, "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "deletedAt" TIMESTAMP, "ecosystemId" uuid, CONSTRAINT "PK_b547a86fc0c87c1bf14c54a9095" PRIMARY KEY ("id"))',
     );
     await queryRunner.query(
       'CREATE INDEX "ecosystem" ON "Nodes" ("ecosystemId") ',
