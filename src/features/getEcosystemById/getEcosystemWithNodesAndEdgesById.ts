@@ -20,6 +20,7 @@ export async function getEcosystemWithNodesAndEdgesById(id: UUID): Promise<{
       'ecosystem.description',
       'ecosystem.metadata',
       'ecosystem.avatar',
+      'ecosystem.color',
     ])
     .where('ecosystem.id = :id', {id})
     .getOne();
