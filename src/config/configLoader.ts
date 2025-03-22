@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 import dotenvExpand from 'dotenv-expand';
-import {z} from 'zod';
+import {ZodError} from 'zod';
 import {Config, configSchema, rpcConfigSchema} from './configSchema';
 
 dotenvExpand.expand(dotenv.config());
@@ -33,7 +33,7 @@ function loadConfig(): Config {
   try {
     return configSchema.parse(config);
   } catch (error) {
-    if (error instanceof z.ZodError) {
+    if (error instanceof ZodError) {
       const details = error.errors
         .map(err => {
           const path = err.path.join('.');
