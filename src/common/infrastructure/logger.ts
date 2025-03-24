@@ -56,4 +56,4 @@ function createLogger(config: LoggingConfig): winston.Logger {
 }
 
 // Singleton logger instance
-export const logger = createLogger(config.logging);
+export const logger = createLogger(config.logger);

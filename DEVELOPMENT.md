@@ -6,7 +6,7 @@ Migrations do not run automatically. To run the migrations:
 
 1. Compile the TypeScript code: `npm run compile`
 
-2. Run the migrations: `dev:db:run-migrations` (or `db:run-migrations` to run from the build).
+2. Run the migrations: `npm run dev:db:run-migrations` (or `npm run db:run-migrations` to run from the build).
 
 ## Creating a New Migration
 
