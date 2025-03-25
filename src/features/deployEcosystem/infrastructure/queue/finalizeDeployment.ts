@@ -7,7 +7,7 @@ import {loadSubListCreationResults} from '../redis/loadSubListCreationResults';
 import {saveError} from '../../../createEcosystem/infrastructure/database/ecosystemRepository';
 import transitionEcosystemState from '../../../../common/infrastructure/stateMachine/transitionEcosystemState';
 import deleteBqRedisData from '../redis/deleteBqRedisData';
-import createMainIdentity from '../blockchain/createMainIdentity';
+import createEcosystem from '../blockchain/createEcosystem';
 import {setMainIdentityForEcosystem} from '../database/ecosystemRepository';
 import {SubListsBatchJobData} from './enqueueJobs';
 import {NormalizedDripList} from '../../application/convertToDripList';
@@ -51,7 +51,7 @@ export async function finalizeDeployment({
         `Queue '${queue.name}' processing completed. All transactions confirmed successfully.`,
       );
 
-      const txHash = await createMainIdentity({
+      const txHash = await createEcosystem({
         chainId,
         dripList,
         ecosystemId,
@@ -94,7 +94,7 @@ export async function deployEcosystem({
   logger.info(`Finalizing deployment for ecosystem '${ecosystemId}'...`);
 
   try {
-    const txHash = await createMainIdentity({
+    const txHash = await createEcosystem({
       chainId,
       dripList,
       ecosystemId,

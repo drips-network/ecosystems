@@ -26,7 +26,7 @@ export const pinataConfigSchema = z.object({
 export const configSchema = z.object({
   port: z.number().int().positive().default(3000),
   databaseConnectionString: z.string(),
-  logging: loggingConfigSchema,
+  logger: loggingConfigSchema,
   redisConnectionString: z.string(),
   gitHubToken: z.string(),
   rpc: rpcConfigSchema,
