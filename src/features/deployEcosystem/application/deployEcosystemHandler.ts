@@ -13,6 +13,7 @@ import {
 } from '../infrastructure/database/ecosystemRepository';
 import createQueue from './createQueue';
 import {deployEcosystem} from '../infrastructure/queue/finalizeDeployment';
+import transitionEcosystemState from '../../../common/infrastructure/stateMachine/transitionEcosystemState';
 
 export const handleDeployEcosystem = async ({
   body: {chainId, ownerAddress},
@@ -25,6 +26,8 @@ export const handleDeployEcosystem = async ({
 
   const nodes = await getEcosystemNodes(id);
   const dripList = await convertToDripList(nodes, ownerAddress, chainId);
+
+  await transitionEcosystemState(id, 'DEPLOYMENT_STARTED');
 
   // If there are no sub-lists, deploy the ecosystem directly. There is no need to enqueue jobs.
   if (dripList.subLists.length === 0) {

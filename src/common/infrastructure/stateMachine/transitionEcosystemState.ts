@@ -40,11 +40,11 @@ export default async function transitionEcosystemState(
 
   const newState = actor.getSnapshot().value as Ecosystem['state'];
 
+  await repository.update({id: ecosystem.id}, {state: newState});
+
   logger.info(
     `Ecosystem '${ecosystemId}' transitioned from '${ecosystem.state}' to '${newState}'.`,
   );
-
-  await repository.update({id: ecosystem.id}, {state: newState});
 
   return newState;
 }
