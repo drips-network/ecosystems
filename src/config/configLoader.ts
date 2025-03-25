@@ -9,7 +9,7 @@ function loadConfig(): Config {
   const config = {
     port: process.env.PORT ? parseInt(process.env.PORT, 10) : undefined,
     databaseConnectionString: process.env.DB_CONNECTION_STRING,
-    logging: {
+    logger: {
       level: process.env.LOG_LEVEL,
       format: process.env.LOG_FORMAT,
       destination: process.env.LOG_DESTINATION,
