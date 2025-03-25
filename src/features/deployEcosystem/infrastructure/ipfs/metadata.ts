@@ -40,7 +40,7 @@ export function keyValueToMetadata({
   };
 }
 
-export async function pinDripListMetadata(
+export async function pinEcosystemMetadata(
   ecosystemId: UUID,
   dripListId: AccountId,
   recipients: (ProjectReceiver | SubListReceiver)[],

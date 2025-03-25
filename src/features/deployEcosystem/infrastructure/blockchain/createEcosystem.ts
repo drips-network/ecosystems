@@ -5,7 +5,7 @@ import {logger} from '../../../../common/infrastructure/logger';
 import waitUntilTxIsConfirmed from '../../application/waitUntilTxIsConfirmed';
 import {SuccessfulSubListCreationResult} from '../redis/createRedisOptions';
 import {populateDripListCreationTxs} from './populateTransactions';
-import {pinDripListMetadata} from '../ipfs/metadata';
+import {pinEcosystemMetadata} from '../ipfs/metadata';
 import unreachable from '../../../../common/application/unreachable';
 import {NormalizedDripList} from '../../application/convertToDripList';
 import {ProjectReceiver, SubListReceiver} from '../../application/types';
@@ -18,7 +18,7 @@ type Params = {
   successfulSubListCreationResults: SuccessfulSubListCreationResult[];
 };
 
-export default async function createMainIdentity({
+export default async function createEcosystem({
   chainId,
   dripList,
   ecosystemId,
@@ -46,7 +46,7 @@ export default async function createMainIdentity({
     );
   }
 
-  const ipfsHash = await pinDripListMetadata(
+  const ipfsHash = await pinEcosystemMetadata(
     ecosystemId,
     dripList.accountId,
     receivers,
