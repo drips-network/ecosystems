@@ -35,6 +35,7 @@ export const configSchema = z.object({
   txConfirmationInterval: z.number().int().positive().default(15000), // 30 seconds
   pinata: pinataConfigSchema,
   shouldLoadQueueUI: z.boolean().default(false),
+  confirmations: z.number().int().positive().default(3),
 });
 
 export type LoggingConfig = z.infer<typeof loggingConfigSchema>;

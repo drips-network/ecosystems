@@ -3,6 +3,7 @@ import expectUntil from '../../../common/application/expect';
 import getWallet from '../../../common/infrastructure/contracts/getWallet';
 import {ChainId, OxString} from '../../../common/domain/types';
 import {logger} from '../../../common/infrastructure/logger';
+import {config} from '../../../config/configLoader';
 
 export default async function waitUntilTxIsConfirmed(
   txHash: OxString,
@@ -35,7 +36,7 @@ async function isTxConfirmed(
 
   const confirmations = currentBlock - receipt.blockNumber;
 
-  const success = confirmations >= 3;
+  const success = confirmations >= config.confirmations;
 
   if (success) {
     logger.info(`Transaction '${txHash}' is confirmed.`);
