@@ -28,6 +28,9 @@ function loadConfig(): Config {
       secretApiKey: process.env.PINATA_SECRET_API_KEY,
     },
     shouldLoadQueueUI: process.env.SHOULD_LOAD_QUEUE_UI === 'true',
+    confirmations: process.env.CONFIRMATIONS
+      ? parseInt(process.env.CONFIRMATIONS, 10)
+      : undefined,
   };
 
   try {
