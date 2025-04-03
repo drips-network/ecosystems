@@ -20,7 +20,6 @@ import {Receiver} from '../../application/types';
 import {executeDripsReadMethod} from '../../../../common/infrastructure/contracts/drips/drips';
 import {populateImmutableSplitsDriverWriteTx} from '../../../../common/infrastructure/contracts/immutableSplits/immutableSplits';
 import {SubList} from '../../application/batchSubLists';
-import {UUID} from 'crypto';
 import getWallet from '../../../../common/infrastructure/contracts/getWallet';
 
 export async function populateDripListCreationTxs(

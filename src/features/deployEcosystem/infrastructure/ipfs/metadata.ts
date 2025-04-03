@@ -88,6 +88,12 @@ export async function pinSubListMetadata(
     parent: {
       driver: 'nft',
       accountId: parentDripListId,
+      type: 'ecosystem',
+    },
+    root: {
+      driver: 'nft',
+      accountId: parentDripListId, // With the current implementation, the root is always the same as the parent.
+      type: 'ecosystem',
     },
   } as LatestVersion<typeof immutableSplitsDriverMetadataParser>;
 
