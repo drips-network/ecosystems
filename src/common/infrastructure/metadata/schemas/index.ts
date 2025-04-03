@@ -11,7 +11,7 @@ import {nftDriverAccountMetadataSchemaV4} from './nft-driver/v4';
 import {nftDriverAccountMetadataSchemaV5} from './nft-driver/v5';
 import {repoDriverAccountMetadataSchemaV5} from './repo-driver/v5';
 import {nftDriverAccountMetadataSchemaV6} from './nft-driver/v6';
-import {subListMetadataSchemaV1} from './subList/v1';
+import {subListMetadataSchemaV1} from './sub-list/v1';
 
 export const nftDriverAccountMetadataParser = createVersionedParser([
   nftDriverAccountMetadataSchemaV6.parse,

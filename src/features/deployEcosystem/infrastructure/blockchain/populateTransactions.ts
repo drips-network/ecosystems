@@ -72,7 +72,6 @@ export async function populateDripListCreationTxs(
 export async function populateSubListCreationTxsByReceiversHash(
   subList: SubList,
   chainId: ChainId,
-  ecosystemId: UUID,
   parentDripListId: AccountId,
 ) {
   const map: Map<
@@ -84,7 +83,6 @@ export async function populateSubListCreationTxsByReceiversHash(
   > = new Map();
 
   const ipfsHash = await pinSubListMetadata(
-    ecosystemId,
     parentDripListId,
     subList.receivers,
   );
@@ -120,11 +118,9 @@ export async function populateSubListCreationTxsByReceiversHash(
 }
 
 export function formatSplitReceivers(receivers: Receiver[]): SplitsReceiver[] {
-  const validReceivers = receivers.filter(r => r.weight > 0);
-
   // Splits receivers must be sorted by user ID, deduplicated, and without weights <= 0.
 
-  const uniqueReceivers = validReceivers.reduce((unique: Receiver[], o) => {
+  const uniqueReceivers = receivers.reduce((unique: Receiver[], o) => {
     if (
       !unique.some(
         (obj: Receiver) =>

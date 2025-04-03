@@ -15,7 +15,6 @@ import {
   SubListReceiver,
 } from '../../application/types';
 import {LatestVersion} from '@efstajas/versioned-parser';
-import z from 'zod';
 
 export const USER_METADATA_KEY = 'ipfs';
 
@@ -78,16 +77,12 @@ export async function pinEcosystemMetadata(
 }
 
 export async function pinSubListMetadata(
-  ecosystemId: UUID,
   parentDripListId: AccountId,
   receivers: Receiver[],
 ): Promise<IpfsHash> {
-  const {name, description} = await getEcosystemById(ecosystemId);
   const subListMetadata = {
     driver: 'immutable-splits',
-    name,
-    description,
-    type: 'sub-list',
+    type: 'subList',
     isVisible: true,
     recipients: receivers,
     parent: {

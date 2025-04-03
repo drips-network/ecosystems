@@ -107,7 +107,9 @@ export async function setMainIdentityForEcosystem(
     const transferredOwner = getAddress(
       '0x' + transferOwnershipEvent.topics[2].slice(26),
     );
-    if (transferredOwner !== ownerAddress) {
+    if (
+      transferredOwner.toLocaleLowerCase() !== ownerAddress.toLocaleLowerCase()
+    ) {
       unreachable(
         `Transfer event owner mismatch. Expected: ${ownerAddress}, got: ${transferredOwner}.`,
       );

@@ -4,22 +4,34 @@ import {
   addressDriverSplitReceiverSchema,
   repoDriverSplitReceiverSchema,
 } from '../repo-driver/v2';
-import {subListSplitReceiverSchema} from '../subList/v1';
+import {subListSplitReceiverSchema} from '../sub-list/v1';
+import {dripListSplitReceiverSchema} from './v2';
 
-export const nftDriverAccountMetadataSchemaV6 =
-  nftDriverAccountMetadataSchemaV5.extend({
-    projects: z
-      .array(
-        z.union([
-          repoDriverSplitReceiverSchema,
-          addressDriverSplitReceiverSchema,
-        ]),
-      )
-      .optional(),
-    recipients: z.array(
-      z.union([repoDriverSplitReceiverSchema, subListSplitReceiverSchema]),
-    ),
-    isVisible: z.literal(true),
-    isDripList: z.boolean().optional(),
-    type: z.union([z.literal('ecosystem'), z.literal('drip-list')]),
-  });
+const base = nftDriverAccountMetadataSchemaV5.extend({
+  isDripList: z.undefined().optional(),
+  projects: z.undefined().optional(),
+});
+
+const ecosystemVariant = base.extend({
+  type: z.literal('ecosystem'),
+  recipients: z.array(
+    z.union([repoDriverSplitReceiverSchema, subListSplitReceiverSchema]),
+  ),
+});
+
+const dripListVariant = base.extend({
+  type: z.literal('dripList'),
+  recipients: z.array(
+    z.union([
+      repoDriverSplitReceiverSchema,
+      subListSplitReceiverSchema,
+      addressDriverSplitReceiverSchema,
+      dripListSplitReceiverSchema,
+    ]),
+  ),
+});
+
+export const nftDriverAccountMetadataSchemaV6 = z.discriminatedUnion('type', [
+  ecosystemVariant,
+  dripListVariant,
+]);
