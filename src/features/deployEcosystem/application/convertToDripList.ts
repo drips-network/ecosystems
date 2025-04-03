@@ -1,5 +1,5 @@
 import {Node} from '../../../common/domain/entities.ts/Node';
-import {ProjectReceiver, Receiver, SubListReceiver} from './types';
+import {ProjectReceiver, Receiver} from './types';
 import {logger} from '../../../common/infrastructure/logger';
 import unreachable from '../../../common/application/unreachable';
 import {AccountId, ChainId, OxString} from '../../../common/domain/types';
@@ -9,11 +9,11 @@ import getWallet from '../../../common/infrastructure/contracts/getWallet';
 
 type DripList = {
   projectReceivers: ProjectReceiver[];
-  subListReceivers: SubListReceiver[][];
+  subListReceivers: ProjectReceiver[][]; // In the future, we may allow `SubListReceiver` types as well.
 };
 
 type NormalizedSubList = {
-  receivers: SubListReceiver[];
+  receivers: ProjectReceiver[];
   normalizedWeight: number;
 };
 
@@ -70,15 +70,17 @@ export default async function convertToDripList(
     );
   }
 
-  const allNodesExceptRoot = nodes.filter(
-    node => node.projectName !== 'root',
-  ) as (Node & {projectAccountId: string; url: string})[];
+  const rootNode = nodes.find(node => node.projectName === 'root');
+  if (!rootNode) {
+    unreachable('Root node is missing.');
+  }
 
-  if (allNodesExceptRoot.length !== nodes.length - 1) {
-    // Excluding the `root` node.
-    unreachable(
-      'Found invalid nodes structure while converting ecosystem to Drip List.',
-    );
+  // Filter out the root node and any node with an absolute weight of 0.
+  const allNodesExceptRoot = nodes.filter(
+    node => node.projectName !== 'root' && node.absoluteWeight > 0,
+  ) as (Node & {projectAccountId: string; url: string})[];
+  if (allNodesExceptRoot.length === 0) {
+    throw new Error('No valid nodes with positive weight found.');
   }
 
   // Simple case: everything fits as direct receivers.
@@ -111,7 +113,7 @@ export default async function convertToDripList(
   const subListsCount = totalIDs - rawReceiversCount;
 
   // Distribute remaining accounts across sub-lists.
-  const subLists: SubListReceiver[][] = [];
+  const subListReceivers: ProjectReceiver[][] = [];
   let processedAccounts = 0;
 
   // Loop until all sub-list nodes are processed.
@@ -128,12 +130,8 @@ export default async function convertToDripList(
 
     // Only add non-empty sub-lists.
     if (subListSlice.length > 0) {
-      subLists.push(
-        subListSlice.map(node => ({
-          accountId: node.projectAccountId,
-          weight: node.absoluteWeight,
-          type: 'sub-list',
-        })),
+      subListReceivers.push(
+        subListSlice.map(node => mapToProjectReceiver(node)),
       );
     }
 
@@ -145,7 +143,7 @@ export default async function convertToDripList(
       projectReceivers: allNodesExceptRoot
         .slice(0, rawReceiversCount)
         .map(mapToProjectReceiver),
-      subListReceivers: subLists,
+      subListReceivers,
     },
     ownerAddress,
     chainId,

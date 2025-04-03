@@ -4,7 +4,7 @@ import {
   repoDriverSplitReceiverSchema,
   addressDriverSplitReceiverSchema,
 } from '../../../common/infrastructure/metadata/schemas/repo-driver/v2';
-import {subListSplitReceiverSchema} from '../../../common/infrastructure/metadata/schemas/subList/v1';
+import {subListSplitReceiverSchema} from '../../../common/infrastructure/metadata/schemas/sub-list/v1';
 
 export type TransactionExecutionStrategy<TContext, TResult> = {
   executeTx: (context: TContext) => Promise<TResult>;

@@ -32,7 +32,6 @@ export const createNonSponsoredTransactionStrategy =
           await populateSubListCreationTxsByReceiversHash(
             subList,
             chainId,
-            ecosystemId,
             dripListId,
           );
         const txs = [...subListCreationTxsByReceiversHash.values()].map(
@@ -103,7 +102,7 @@ function extractSubListReceivers(
           receivers.push({
             accountId,
             weight,
-            type: 'sub-list',
+            type: 'subList',
           });
         } else {
           unreachable('Invalid number of topics in the `CreatedSplits` event.');
