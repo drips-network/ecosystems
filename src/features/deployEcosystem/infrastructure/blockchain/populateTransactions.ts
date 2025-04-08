@@ -32,7 +32,7 @@ export async function populateEcosystemMainAccountCreationTxs(
 ) {
   const deployerAddress = getWallet(chainId).address as OxString;
 
-  const dripListCreationTx = await populateNftDriverWriteTx({
+  const ecosystemMainAccountCreationTx = await populateNftDriverWriteTx({
     functionName: 'safeMintWithSalt',
     args: [
       toBigInt(salt),
@@ -49,7 +49,7 @@ export async function populateEcosystemMainAccountCreationTxs(
 
   const formattedReceivers = formatSplitReceivers(receivers);
 
-  const setDripListSplitsTx = await populateNftDriverWriteTx({
+  const setEcosystemMainAccountSplitsTx = await populateNftDriverWriteTx({
     functionName: 'setSplits',
     args: [toBigInt(listId), formattedReceivers],
     chainId,
@@ -62,8 +62,8 @@ export async function populateEcosystemMainAccountCreationTxs(
   });
 
   return [
-    convertToCallerCall(dripListCreationTx),
-    convertToCallerCall(setDripListSplitsTx),
+    convertToCallerCall(ecosystemMainAccountCreationTx),
+    convertToCallerCall(setEcosystemMainAccountSplitsTx),
     convertToCallerCall(transferOwnershipTx),
   ];
 }
