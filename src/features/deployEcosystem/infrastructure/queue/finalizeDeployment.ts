@@ -10,7 +10,7 @@ import deleteBqRedisData from '../redis/deleteBqRedisData';
 import createEcosystem from '../blockchain/createEcosystem';
 import {setMainIdentityForEcosystem} from '../database/ecosystemRepository';
 import {SubListsBatchJobData} from './enqueueJobs';
-import {NormalizedEcosystemMainIdentity} from '../../application/convertToEcosystemMainAccount';
+import {NormalizedEcosystemMainAccount} from '../../application/convertToEcosystemMainAccount';
 
 type Params = {
   chainId: ChainId;
@@ -18,7 +18,7 @@ type Params = {
   ecosystemId: UUID;
   ownerAddress: OxString;
   queue: BeeQueue<SubListsBatchJobData>;
-  ecosystemMainAccount: NormalizedEcosystemMainIdentity;
+  ecosystemMainAccount: NormalizedEcosystemMainAccount;
 };
 
 export async function finalizeDeployment({
@@ -87,7 +87,7 @@ export async function deployEcosystem({
   ownerAddress,
 }: {
   chainId: ChainId;
-  ecosystemMainAccount: NormalizedEcosystemMainIdentity;
+  ecosystemMainAccount: NormalizedEcosystemMainAccount;
   ecosystemId: UUID;
   ownerAddress: OxString;
 }) {

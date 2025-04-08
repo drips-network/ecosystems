@@ -6,11 +6,11 @@ import {finalizeDeployment} from './finalizeDeployment';
 import {saveProcessedJob} from '../../../../common/infrastructure/redis/saveProcessedJob';
 import createRedisOptions from '../redis/createRedisOptions';
 import {SubListsBatchJobData} from './enqueueJobs';
-import {NormalizedEcosystemMainIdentity} from '../../application/convertToEcosystemMainAccount';
+import {NormalizedEcosystemMainAccount} from '../../application/convertToEcosystemMainAccount';
 
 export const processQueue = async (
   queue: BeeQueue<SubListsBatchJobData>,
-  ecosystemMainAccount: NormalizedEcosystemMainIdentity,
+  ecosystemMainAccount: NormalizedEcosystemMainAccount,
 ) => {
   queue.process(async job => {
     const {chainId, ecosystemId, totalTxs, ownerAddress} = job.data;

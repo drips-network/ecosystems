@@ -7,14 +7,14 @@ import {SuccessfulSubListCreationResult} from '../redis/createRedisOptions';
 import {populateEcosystemMainAccountCreationTxs} from './populateTransactions';
 import {pinEcosystemMetadata} from '../ipfs/metadata';
 import unreachable from '../../../../common/application/unreachable';
-import {NormalizedEcosystemMainIdentity} from '../../application/convertToEcosystemMainAccount';
+import {NormalizedEcosystemMainAccount} from '../../application/convertToEcosystemMainAccount';
 import {ProjectReceiver, SubListReceiver} from '../../application/types';
 
 type Params = {
   chainId: ChainId;
   ecosystemId: UUID;
   ownerAddress: OxString;
-  ecosystemMainAccount: NormalizedEcosystemMainIdentity;
+  ecosystemMainAccount: NormalizedEcosystemMainAccount;
   successfulSubListCreationResults: SuccessfulSubListCreationResult[];
 };
 
