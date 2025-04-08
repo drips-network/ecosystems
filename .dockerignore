@@ -1,0 +1,8 @@
+README.md
+.env.local
+.env.template
+docker/
+dist/
+node_modules/
+.husky/
+.env
