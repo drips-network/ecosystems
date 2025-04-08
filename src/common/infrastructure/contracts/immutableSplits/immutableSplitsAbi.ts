@@ -29,7 +29,12 @@ export const immutableSplitsAbi = [
   {
     anonymous: false,
     inputs: [
-      {indexed: true, internalType: 'address', name: 'beacon', type: 'address'},
+      {
+        indexed: true,
+        internalType: 'address',
+        name: 'beacon',
+        type: 'address',
+      },
     ],
     name: 'BeaconUpgraded',
     type: 'event',
@@ -75,7 +80,12 @@ export const immutableSplitsAbi = [
   {
     anonymous: false,
     inputs: [
-      {indexed: true, internalType: 'address', name: 'pauser', type: 'address'},
+      {
+        indexed: true,
+        internalType: 'address',
+        name: 'pauser',
+        type: 'address',
+      },
     ],
     name: 'Paused',
     type: 'event',
@@ -83,8 +93,18 @@ export const immutableSplitsAbi = [
   {
     anonymous: false,
     inputs: [
-      {indexed: true, internalType: 'address', name: 'pauser', type: 'address'},
-      {indexed: true, internalType: 'address', name: 'admin', type: 'address'},
+      {
+        indexed: true,
+        internalType: 'address',
+        name: 'pauser',
+        type: 'address',
+      },
+      {
+        indexed: true,
+        internalType: 'address',
+        name: 'admin',
+        type: 'address',
+      },
     ],
     name: 'PauserGranted',
     type: 'event',
@@ -92,8 +112,18 @@ export const immutableSplitsAbi = [
   {
     anonymous: false,
     inputs: [
-      {indexed: true, internalType: 'address', name: 'pauser', type: 'address'},
-      {indexed: true, internalType: 'address', name: 'admin', type: 'address'},
+      {
+        indexed: true,
+        internalType: 'address',
+        name: 'pauser',
+        type: 'address',
+      },
+      {
+        indexed: true,
+        internalType: 'address',
+        name: 'admin',
+        type: 'address',
+      },
     ],
     name: 'PauserRevoked',
     type: 'event',
@@ -101,7 +131,12 @@ export const immutableSplitsAbi = [
   {
     anonymous: false,
     inputs: [
-      {indexed: true, internalType: 'address', name: 'pauser', type: 'address'},
+      {
+        indexed: true,
+        internalType: 'address',
+        name: 'pauser',
+        type: 'address',
+      },
     ],
     name: 'Unpaused',
     type: 'event',
@@ -137,7 +172,11 @@ export const immutableSplitsAbi = [
     inputs: [],
     name: 'allPausers',
     outputs: [
-      {internalType: 'address[]', name: 'pausersList', type: 'address[]'},
+      {
+        internalType: 'address[]',
+        name: 'pausersList',
+        type: 'address[]',
+      },
     ],
     stateMutability: 'view',
     type: 'function',
@@ -275,7 +314,11 @@ export const immutableSplitsAbi = [
   },
   {
     inputs: [
-      {internalType: 'address', name: 'newImplementation', type: 'address'},
+      {
+        internalType: 'address',
+        name: 'newImplementation',
+        type: 'address',
+      },
     ],
     name: 'upgradeTo',
     outputs: [],
@@ -284,7 +327,11 @@ export const immutableSplitsAbi = [
   },
   {
     inputs: [
-      {internalType: 'address', name: 'newImplementation', type: 'address'},
+      {
+        internalType: 'address',
+        name: 'newImplementation',
+        type: 'address',
+      },
       {internalType: 'bytes', name: 'data', type: 'bytes'},
     ],
     name: 'upgradeToAndCall',

@@ -4,37 +4,40 @@ import {executeCallerWriteTx} from '../../../../common/infrastructure/contracts/
 import {logger} from '../../../../common/infrastructure/logger';
 import waitUntilTxIsConfirmed from '../../application/waitUntilTxIsConfirmed';
 import {SuccessfulSubListCreationResult} from '../redis/createRedisOptions';
-import {populateDripListCreationTxs} from './populateTransactions';
+import {populateEcosystemMainAccountCreationTxs} from './populateTransactions';
 import {pinEcosystemMetadata} from '../ipfs/metadata';
 import unreachable from '../../../../common/application/unreachable';
-import {NormalizedDripList} from '../../application/convertToDripList';
+import {NormalizedEcosystemMainIdentity} from '../../application/convertToEcosystemMainAccount';
 import {ProjectReceiver, SubListReceiver} from '../../application/types';
 
 type Params = {
   chainId: ChainId;
   ecosystemId: UUID;
   ownerAddress: OxString;
-  dripList: NormalizedDripList;
+  ecosystemMainAccount: NormalizedEcosystemMainIdentity;
   successfulSubListCreationResults: SuccessfulSubListCreationResult[];
 };
 
 export default async function createEcosystem({
   chainId,
-  dripList,
+  ecosystemMainAccount,
   ecosystemId,
   ownerAddress,
   successfulSubListCreationResults,
 }: Params) {
-  // Validate if all results have the same parent Drip List.
+  // Validate if all results have the same parent Ecosystem Main Account.
   if (
     !successfulSubListCreationResults.every(
-      result => result.parentDripListId === dripList.accountId,
+      result =>
+        result.ecosystemMainAccountId === ecosystemMainAccount.accountId,
     )
   ) {
-    unreachable('All results must have the same parent Drip List.');
+    unreachable(
+      'All results must have the same parent Ecosystem Main Account.',
+    );
   }
 
-  const receivers = [...dripList.projectReceivers] as (
+  const receivers = [...ecosystemMainAccount.projectReceivers] as (
     | ProjectReceiver
     | SubListReceiver
   )[];
@@ -48,13 +51,13 @@ export default async function createEcosystem({
 
   const ipfsHash = await pinEcosystemMetadata(
     ecosystemId,
-    dripList.accountId,
+    ecosystemMainAccount.accountId,
     receivers,
   );
 
-  const txs = await populateDripListCreationTxs(
-    dripList.accountId,
-    dripList.salt,
+  const txs = await populateEcosystemMainAccountCreationTxs(
+    ecosystemMainAccount.accountId,
+    ecosystemMainAccount.salt,
     ipfsHash,
     ownerAddress,
     chainId,
@@ -67,12 +70,12 @@ export default async function createEcosystem({
     chainId,
   });
   logger.info(
-    `Executing caller transaction '${hash}' to create the main Drip List for ecosystem '${ecosystemId}'...`,
+    `Executing caller transaction '${hash}' to create the Ecosystem Main Account for ecosystem '${ecosystemId}'...`,
   );
   await waitUntilTxIsConfirmed(hash as OxString, chainId);
 
   logger.info(
-    `Main Drip List creation transaction for ecosystem '${ecosystemId}' confirmed.`,
+    `Ecosystem Main Account creation transaction for ecosystem '${ecosystemId}' confirmed.`,
   );
 
   return hash as OxString;

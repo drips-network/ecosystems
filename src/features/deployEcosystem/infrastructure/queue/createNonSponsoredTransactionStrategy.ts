@@ -15,7 +15,7 @@ import {SubListsBatchJobData} from './enqueueJobs';
 
 type TransactionExecutionStrategyContext = {
   job: SubListsBatchJobData;
-  dripListId: AccountId;
+  ecosystemMainAccountId: AccountId;
 };
 
 export const createNonSponsoredTransactionStrategy =
@@ -26,14 +26,13 @@ export const createNonSponsoredTransactionStrategy =
     return {
       executeTx: async ({
         job: {subList, chainId, ecosystemId},
-        dripListId,
+        ecosystemMainAccountId,
       }: TransactionExecutionStrategyContext) => {
         const subListCreationTxsByReceiversHash =
           await populateSubListCreationTxsByReceiversHash(
             subList,
             chainId,
-            ecosystemId,
-            dripListId,
+            ecosystemMainAccountId,
           );
         const txs = [...subListCreationTxsByReceiversHash.values()].map(
           ({tx}) => tx,
@@ -103,7 +102,7 @@ function extractSubListReceivers(
           receivers.push({
             accountId,
             weight,
-            type: 'sub-list',
+            type: 'subList',
           });
         } else {
           unreachable('Invalid number of topics in the `CreatedSplits` event.');

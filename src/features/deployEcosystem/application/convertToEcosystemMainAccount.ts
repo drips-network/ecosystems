@@ -1,5 +1,5 @@
 import {Node} from '../../../common/domain/entities.ts/Node';
-import {ProjectReceiver, Receiver, SubListReceiver} from './types';
+import {ProjectReceiver, Receiver} from './types';
 import {logger} from '../../../common/infrastructure/logger';
 import unreachable from '../../../common/application/unreachable';
 import {AccountId, ChainId, OxString} from '../../../common/domain/types';
@@ -7,24 +7,24 @@ import calculateRandomSalt from '../infrastructure/blockchain/calculateRandomSal
 import {executeNftDriverReadMethod} from '../../../common/infrastructure/contracts/nftDriver/nftDriver';
 import getWallet from '../../../common/infrastructure/contracts/getWallet';
 
-type DripList = {
+type EcosystemMainIdentity = {
   projectReceivers: ProjectReceiver[];
-  subListReceivers: SubListReceiver[][];
+  subListReceivers: ProjectReceiver[][]; // In the future, we may allow `SubListReceiver` types as well.
 };
 
 type NormalizedSubList = {
-  receivers: SubListReceiver[];
+  receivers: ProjectReceiver[];
   normalizedWeight: number;
 };
 
-export type NormalizedDripList = {
+export type NormalizedEcosystemMainIdentity = {
   salt: bigint;
   accountId: AccountId;
   subLists: NormalizedSubList[];
   projectReceivers: ProjectReceiver[];
 };
 
-// The DripList structure has a two-level design:
+// The `EcosystemMainIdentity` structure has a two-level design:
 //  - Level 1: Contains both direct project receivers and references to sub-lists.
 //  - Level 2: Contains sub-lists of additional receivers.
 // The structure is limited by `MAX_SPLITS_RECEIVERS` per level:
@@ -33,7 +33,7 @@ const MAX_SPLITS_RECEIVERS = 200; // Hardcoded in Drips contracts.
 const MAX_NUMBER_OF_NODES = 40000; // Calculated based on `MAX_SPLITS_RECEIVERS`.
 
 /**
- * Converts a flat list of nodes into a `DripList` structure.
+ * Converts a flat list of nodes into a `EcosystemMainIdentity` structure.
  * This function organizes nodes according to the following constraints:
  * 1. No level can contain more than `MAX_SPLITS_RECEIVERS` total slots.
  * 2. The first level can contain both direct receivers and sub-list references.
@@ -52,38 +52,40 @@ const MAX_NUMBER_OF_NODES = 40000; // Calculated based on `MAX_SPLITS_RECEIVERS`
  *
  *    d. Distributes remaining nodes across sub-lists
  *
- * The function returns a `DripList` object containing:
+ * The function returns a `EcosystemMainIdentity` object containing:
  * - `rawReceivers`: array of direct `ProjectReceiver` objects in the first level.
  * - `subListReceivers`: array of arrays, each representing a sub-list of `SubListReceiver` objects.
  *
  * Note that the algorithm is designed to work with max 40,000 nodes.
  *
  */
-export default async function convertToDripList(
+export default async function convertToEcosystemMainAccount(
   nodes: Node[],
   ownerAddress: OxString,
   chainId: ChainId,
-): Promise<NormalizedDripList> {
+): Promise<NormalizedEcosystemMainIdentity> {
   if (nodes.length > MAX_NUMBER_OF_NODES) {
     throw new Error(
-      `Too many nodes provided while converting ecosystem nodes to Drip List. Max allowed is ${MAX_NUMBER_OF_NODES}.`,
+      `Too many nodes provided while converting ecosystem nodes to Ecosystem Main Account. Max allowed is ${MAX_NUMBER_OF_NODES}.`,
     );
   }
 
-  const allNodesExceptRoot = nodes.filter(
-    node => node.projectName !== 'root',
-  ) as (Node & {projectAccountId: string; url: string})[];
+  const rootNode = nodes.find(node => node.projectName === 'root');
+  if (!rootNode) {
+    unreachable('Root node is missing.');
+  }
 
-  if (allNodesExceptRoot.length !== nodes.length - 1) {
-    // Excluding the `root` node.
-    unreachable(
-      'Found invalid nodes structure while converting ecosystem to Drip List.',
-    );
+  // Filter out the root node and any node with an absolute weight of 0.
+  const allNodesExceptRoot = nodes.filter(
+    node => node.projectName !== 'root' && node.absoluteWeight > 0,
+  ) as (Node & {projectAccountId: string; url: string})[];
+  if (allNodesExceptRoot.length === 0) {
+    throw new Error('No valid nodes with positive weight found.');
   }
 
   // Simple case: everything fits as direct receivers.
   if (allNodesExceptRoot.length <= MAX_SPLITS_RECEIVERS) {
-    return normalizeDripList(
+    return normalizeEcosystemMainIdentity(
       {
         projectReceivers: allNodesExceptRoot.map(mapToProjectReceiver),
         subListReceivers: [],
@@ -102,7 +104,7 @@ export default async function convertToDripList(
   // Validate that we can fit the required number of sub-lists.
   if (subListsNeeded > MAX_SPLITS_RECEIVERS) {
     throw new Error(
-      `Need ${subListsNeeded} sub-lists, but the Drip List can only reference up to ${MAX_SPLITS_RECEIVERS} account IDs.`,
+      `Need ${subListsNeeded} sub-lists, but the Ecosystem Main Account can only reference up to ${MAX_SPLITS_RECEIVERS} account IDs.`,
     );
   }
 
@@ -111,7 +113,7 @@ export default async function convertToDripList(
   const subListsCount = totalIDs - rawReceiversCount;
 
   // Distribute remaining accounts across sub-lists.
-  const subLists: SubListReceiver[][] = [];
+  const subListReceivers: ProjectReceiver[][] = [];
   let processedAccounts = 0;
 
   // Loop until all sub-list nodes are processed.
@@ -128,24 +130,20 @@ export default async function convertToDripList(
 
     // Only add non-empty sub-lists.
     if (subListSlice.length > 0) {
-      subLists.push(
-        subListSlice.map(node => ({
-          accountId: node.projectAccountId,
-          weight: node.absoluteWeight,
-          type: 'sub-list',
-        })),
+      subListReceivers.push(
+        subListSlice.map(node => mapToProjectReceiver(node)),
       );
     }
 
     processedAccounts += subListSlice.length;
   }
 
-  return normalizeDripList(
+  return normalizeEcosystemMainIdentity(
     {
       projectReceivers: allNodesExceptRoot
         .slice(0, rawReceiversCount)
         .map(mapToProjectReceiver),
-      subListReceivers: subLists,
+      subListReceivers,
     },
     ownerAddress,
     chainId,
@@ -173,7 +171,7 @@ function mapToProjectReceiver(
 }
 
 /**
- * Returns a normalized version of the input `DripList` structure.
+ * Returns a normalized version of the input `EcosystemMainIdentity` structure.
  *
  * This function performs weight normalization at two levels:
  *
@@ -187,16 +185,16 @@ function mapToProjectReceiver(
  * 2. For each sub-list in the `subListReceivers` array, it normalizes its receivers
  *    so that they sum to 1000000.
  *
- * The returned structure extends the original `DripList` with:
+ * The returned structure extends the original `EcosystemMainIdentity` with:
  * - `projectReceivers`: normalized version of `rawReceivers`
  * - `subLists`: normalized version of `subListReceivers` with an additional
  *   `normalizedWeight` property that indicates the weight allocated to each sub-list.
  */
-async function normalizeDripList(
-  root: DripList,
+async function normalizeEcosystemMainIdentity(
+  root: EcosystemMainIdentity,
   ownerAddress: OxString,
   chainId: ChainId,
-): Promise<NormalizedDripList> {
+): Promise<NormalizedEcosystemMainIdentity> {
   // 1. Compute the raw receivers' weight (root level).
   //    This includes the weights of raw 'project' receivers...
   const rawReceiversTotalWeight = root.projectReceivers.reduce(
@@ -258,7 +256,7 @@ async function normalizeDripList(
   const normalizedSubLists = root.subListReceivers.map((subList, index) => {
     return {
       receivers: normalizeSplitsReceivers(subList),
-      // Attach the normalized weight for the sub-list at the root (Drip List) level.
+      // Attach the normalized weight for the sub-list at the root (Ecosystem Main Account) level.
       normalizedWeight: normalizedSubListRefs[index],
     };
   });
