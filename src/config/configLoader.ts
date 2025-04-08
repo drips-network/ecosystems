@@ -31,6 +31,7 @@ function loadConfig(): Config {
     confirmations: process.env.CONFIRMATIONS
       ? parseInt(process.env.CONFIRMATIONS, 10)
       : undefined,
+    fakePinataUrl: process.env.FAKE_PINATA_URL,
   };
 
   try {

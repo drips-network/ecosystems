@@ -1,4 +1,4 @@
-import {NormalizedEcosystemMainIdentity} from './convertToEcosystemMainAccount';
+import {NormalizedEcosystemMainAccount} from './convertToEcosystemMainAccount';
 import {Receiver} from './types';
 
 export type SubList = {
@@ -7,7 +7,7 @@ export type SubList = {
 };
 
 export default function batchSubLists(
-  ecosystemMainAccount: NormalizedEcosystemMainIdentity,
+  ecosystemMainAccount: NormalizedEcosystemMainAccount,
 ): SubList[][] {
   const totalImmutableSplitsCreationTxs = ecosystemMainAccount.subLists.length;
 

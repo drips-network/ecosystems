@@ -7,7 +7,7 @@ import calculateRandomSalt from '../infrastructure/blockchain/calculateRandomSal
 import {executeNftDriverReadMethod} from '../../../common/infrastructure/contracts/nftDriver/nftDriver';
 import getWallet from '../../../common/infrastructure/contracts/getWallet';
 
-type EcosystemMainIdentity = {
+type EcosystemMainAccount = {
   projectReceivers: ProjectReceiver[];
   subListReceivers: ProjectReceiver[][]; // In the future, we may allow `SubListReceiver` types as well.
 };
@@ -17,14 +17,14 @@ type NormalizedSubList = {
   normalizedWeight: number;
 };
 
-export type NormalizedEcosystemMainIdentity = {
+export type NormalizedEcosystemMainAccount = {
   salt: bigint;
   accountId: AccountId;
   subLists: NormalizedSubList[];
   projectReceivers: ProjectReceiver[];
 };
 
-// The `EcosystemMainIdentity` structure has a two-level design:
+// The `EcosystemMainAccount` structure has a two-level design:
 //  - Level 1: Contains both direct project receivers and references to sub-lists.
 //  - Level 2: Contains sub-lists of additional receivers.
 // The structure is limited by `MAX_SPLITS_RECEIVERS` per level:
@@ -33,7 +33,7 @@ const MAX_SPLITS_RECEIVERS = 200; // Hardcoded in Drips contracts.
 const MAX_NUMBER_OF_NODES = 40000; // Calculated based on `MAX_SPLITS_RECEIVERS`.
 
 /**
- * Converts a flat list of nodes into a `EcosystemMainIdentity` structure.
+ * Converts a flat list of nodes into a `EcosystemMainAccount` structure.
  * This function organizes nodes according to the following constraints:
  * 1. No level can contain more than `MAX_SPLITS_RECEIVERS` total slots.
  * 2. The first level can contain both direct receivers and sub-list references.
@@ -52,7 +52,7 @@ const MAX_NUMBER_OF_NODES = 40000; // Calculated based on `MAX_SPLITS_RECEIVERS`
  *
  *    d. Distributes remaining nodes across sub-lists
  *
- * The function returns a `EcosystemMainIdentity` object containing:
+ * The function returns a `EcosystemMainAccount` object containing:
  * - `rawReceivers`: array of direct `ProjectReceiver` objects in the first level.
  * - `subListReceivers`: array of arrays, each representing a sub-list of `SubListReceiver` objects.
  *
@@ -63,7 +63,7 @@ export default async function convertToEcosystemMainAccount(
   nodes: Node[],
   ownerAddress: OxString,
   chainId: ChainId,
-): Promise<NormalizedEcosystemMainIdentity> {
+): Promise<NormalizedEcosystemMainAccount> {
   if (nodes.length > MAX_NUMBER_OF_NODES) {
     throw new Error(
       `Too many nodes provided while converting ecosystem nodes to Ecosystem Main Account. Max allowed is ${MAX_NUMBER_OF_NODES}.`,
@@ -85,7 +85,7 @@ export default async function convertToEcosystemMainAccount(
 
   // Simple case: everything fits as direct receivers.
   if (allNodesExceptRoot.length <= MAX_SPLITS_RECEIVERS) {
-    return normalizeEcosystemMainIdentity(
+    return normalizeEcosystemMainAccount(
       {
         projectReceivers: allNodesExceptRoot.map(mapToProjectReceiver),
         subListReceivers: [],
@@ -138,7 +138,7 @@ export default async function convertToEcosystemMainAccount(
     processedAccounts += subListSlice.length;
   }
 
-  return normalizeEcosystemMainIdentity(
+  return normalizeEcosystemMainAccount(
     {
       projectReceivers: allNodesExceptRoot
         .slice(0, rawReceiversCount)
@@ -171,7 +171,7 @@ function mapToProjectReceiver(
 }
 
 /**
- * Returns a normalized version of the input `EcosystemMainIdentity` structure.
+ * Returns a normalized version of the input `EcosystemMainAccount` structure.
  *
  * This function performs weight normalization at two levels:
  *
@@ -185,16 +185,16 @@ function mapToProjectReceiver(
  * 2. For each sub-list in the `subListReceivers` array, it normalizes its receivers
  *    so that they sum to 1000000.
  *
- * The returned structure extends the original `EcosystemMainIdentity` with:
+ * The returned structure extends the original `EcosystemMainAccount` with:
  * - `projectReceivers`: normalized version of `rawReceivers`
  * - `subLists`: normalized version of `subListReceivers` with an additional
  *   `normalizedWeight` property that indicates the weight allocated to each sub-list.
  */
-async function normalizeEcosystemMainIdentity(
-  root: EcosystemMainIdentity,
+async function normalizeEcosystemMainAccount(
+  root: EcosystemMainAccount,
   ownerAddress: OxString,
   chainId: ChainId,
-): Promise<NormalizedEcosystemMainIdentity> {
+): Promise<NormalizedEcosystemMainAccount> {
   // 1. Compute the raw receivers' weight (root level).
   //    This includes the weights of raw 'project' receivers...
   const rawReceiversTotalWeight = root.projectReceivers.reduce(
