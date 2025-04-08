@@ -15,6 +15,7 @@ import {
   SubListReceiver,
 } from '../../application/types';
 import {LatestVersion} from '@efstajas/versioned-parser';
+import z from 'zod';
 
 export const USER_METADATA_KEY = 'ipfs';
 
@@ -45,6 +46,7 @@ export async function pinEcosystemMetadata(
   recipients: (ProjectReceiver | SubListReceiver)[],
 ): Promise<IpfsHash> {
   const {name, description} = await getEcosystemById(ecosystemId);
+
   const dripListMetadata = {
     driver: 'nft',
     describes: {
@@ -58,19 +60,12 @@ export async function pinEcosystemMetadata(
     recipients,
   } as LatestVersion<typeof nftDriverAccountMetadataParser>;
 
-  // Ensure the data follows the correct schema at runtime.
   nftDriverAccountMetadataParser.parseLatest(dripListMetadata);
 
-  const res = await pinata.pinJSONToIPFS(dripListMetadata, {
-    pinataOptions: {
-      cidVersion: 0,
-    },
-  });
-
-  const ipfsHash = res.IpfsHash;
+  const ipfsHash = await pinJSON(dripListMetadata);
 
   logger.info(
-    `Ecosystem Main Account'${dripListId}' metadata pinned to IPFS with hash '${ipfsHash}'.`,
+    `Ecosystem Main Account '${dripListId}' metadata pinned to IPFS with hash '${ipfsHash}'.`,
   );
 
   return ipfsHash;
@@ -92,25 +87,41 @@ export async function pinSubListMetadata(
     },
     root: {
       driver: 'nft',
-      accountId: ecosystemMainAccountId, // With the current implementation, the root is always the same as the parent.
+      accountId: ecosystemMainAccountId,
       type: 'ecosystem',
     },
   } as LatestVersion<typeof immutableSplitsDriverMetadataParser>;
 
-  // Ensure the data follows the correct schema at runtime.
   immutableSplitsDriverMetadataParser.parseLatest(subListMetadata);
 
-  const res = await pinata.pinJSONToIPFS(subListMetadata, {
-    pinataOptions: {
-      cidVersion: 0,
-    },
-  });
-
-  const ipfsHash = res.IpfsHash;
+  const ipfsHash = await pinJSON(subListMetadata);
 
   logger.info(
     `Sub-list for parent Ecosystem Main Account '${ecosystemMainAccountId}' metadata pinned to IPFS with hash '${ipfsHash}'.`,
   );
 
   return ipfsHash;
+}
+
+async function pinJSON(data: unknown): Promise<IpfsHash> {
+  if (config.fakePinataUrl) {
+    const res = await fetch(`${config.fakePinataUrl}/pinning/pinJSONToIPFS`, {
+      method: 'POST',
+      body: JSON.stringify({pinataContent: data}),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const resBody = z.object({IpfsHash: z.string()}).parse(await res.json());
+    return resBody.IpfsHash;
+  }
+
+  const res = await pinata.pinJSONToIPFS(data, {
+    pinataOptions: {
+      cidVersion: 0,
+    },
+  });
+
+  return res.IpfsHash;
 }

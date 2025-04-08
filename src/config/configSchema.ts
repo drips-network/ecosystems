@@ -36,6 +36,7 @@ export const configSchema = z.object({
   pinata: pinataConfigSchema,
   shouldLoadQueueUI: z.boolean().default(false),
   confirmations: z.number().int().default(3),
+  fakePinataUrl: z.string().url().optional(),
 });
 
 export type LoggingConfig = z.infer<typeof loggingConfigSchema>;
