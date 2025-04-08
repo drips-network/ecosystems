@@ -70,14 +70,14 @@ export async function pinEcosystemMetadata(
   const ipfsHash = res.IpfsHash;
 
   logger.info(
-    `Drip List '${dripListId}' metadata pinned to IPFS with hash '${ipfsHash}'.`,
+    `Ecosystem Main Account'${dripListId}' metadata pinned to IPFS with hash '${ipfsHash}'.`,
   );
 
   return ipfsHash;
 }
 
 export async function pinSubListMetadata(
-  parentDripListId: AccountId,
+  ecosystemMainAccountId: AccountId,
   receivers: Receiver[],
 ): Promise<IpfsHash> {
   const subListMetadata = {
@@ -87,12 +87,12 @@ export async function pinSubListMetadata(
     recipients: receivers,
     parent: {
       driver: 'nft',
-      accountId: parentDripListId,
+      accountId: ecosystemMainAccountId,
       type: 'ecosystem',
     },
     root: {
       driver: 'nft',
-      accountId: parentDripListId, // With the current implementation, the root is always the same as the parent.
+      accountId: ecosystemMainAccountId, // With the current implementation, the root is always the same as the parent.
       type: 'ecosystem',
     },
   } as LatestVersion<typeof immutableSplitsDriverMetadataParser>;
@@ -109,7 +109,7 @@ export async function pinSubListMetadata(
   const ipfsHash = res.IpfsHash;
 
   logger.info(
-    `Sub-list for parent Drip List '${parentDripListId}' metadata pinned to IPFS with hash '${ipfsHash}'.`,
+    `Sub-list for parent Ecosystem Main Account '${ecosystemMainAccountId}' metadata pinned to IPFS with hash '${ipfsHash}'.`,
   );
 
   return ipfsHash;

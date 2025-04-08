@@ -22,7 +22,7 @@ import {populateImmutableSplitsDriverWriteTx} from '../../../../common/infrastru
 import {SubList} from '../../application/batchSubLists';
 import getWallet from '../../../../common/infrastructure/contracts/getWallet';
 
-export async function populateDripListCreationTxs(
+export async function populateEcosystemMainAccountCreationTxs(
   listId: string,
   salt: bigint,
   ipfsHash: IpfsHash,
@@ -71,7 +71,7 @@ export async function populateDripListCreationTxs(
 export async function populateSubListCreationTxsByReceiversHash(
   subList: SubList,
   chainId: ChainId,
-  parentDripListId: AccountId,
+  ecosystemMainAccountId: AccountId,
 ) {
   const map: Map<
     OxString,
@@ -82,7 +82,7 @@ export async function populateSubListCreationTxsByReceiversHash(
   > = new Map();
 
   const ipfsHash = await pinSubListMetadata(
-    parentDripListId,
+    ecosystemMainAccountId,
     subList.receivers,
   );
 

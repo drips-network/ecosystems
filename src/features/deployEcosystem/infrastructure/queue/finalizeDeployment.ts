@@ -10,21 +10,21 @@ import deleteBqRedisData from '../redis/deleteBqRedisData';
 import createEcosystem from '../blockchain/createEcosystem';
 import {setMainIdentityForEcosystem} from '../database/ecosystemRepository';
 import {SubListsBatchJobData} from './enqueueJobs';
-import {NormalizedDripList} from '../../application/convertToDripList';
+import {NormalizedEcosystemMainIdentity} from '../../application/convertToEcosystemMainAccount';
 
 type Params = {
   chainId: ChainId;
   totalJobs: number;
   ecosystemId: UUID;
   ownerAddress: OxString;
-  dripList: NormalizedDripList;
   queue: BeeQueue<SubListsBatchJobData>;
+  ecosystemMainAccount: NormalizedEcosystemMainIdentity;
 };
 
 export async function finalizeDeployment({
   queue,
   chainId,
-  dripList,
+  ecosystemMainAccount,
   totalJobs,
   ecosystemId,
   ownerAddress,
@@ -53,7 +53,7 @@ export async function finalizeDeployment({
 
       const txHash = await createEcosystem({
         chainId,
-        dripList,
+        ecosystemMainAccount,
         ecosystemId,
         ownerAddress,
         successfulSubListCreationResults: successful,
@@ -63,7 +63,7 @@ export async function finalizeDeployment({
         txHash,
         ecosystemId,
         chainId,
-        dripList.accountId,
+        ecosystemMainAccount.accountId,
         ownerAddress,
       );
       await transitionEcosystemState(ecosystemId, 'DEPLOYMENT_COMPLETED');
@@ -82,12 +82,12 @@ export async function finalizeDeployment({
 
 export async function deployEcosystem({
   chainId,
-  dripList,
+  ecosystemMainAccount,
   ecosystemId,
   ownerAddress,
 }: {
   chainId: ChainId;
-  dripList: NormalizedDripList;
+  ecosystemMainAccount: NormalizedEcosystemMainIdentity;
   ecosystemId: UUID;
   ownerAddress: OxString;
 }) {
@@ -96,7 +96,7 @@ export async function deployEcosystem({
   try {
     const txHash = await createEcosystem({
       chainId,
-      dripList,
+      ecosystemMainAccount,
       ecosystemId,
       ownerAddress,
       successfulSubListCreationResults: [],
@@ -106,7 +106,7 @@ export async function deployEcosystem({
       txHash,
       ecosystemId,
       chainId,
-      dripList.accountId,
+      ecosystemMainAccount.accountId,
       ownerAddress,
     );
     await transitionEcosystemState(ecosystemId, 'DEPLOYMENT_COMPLETED');

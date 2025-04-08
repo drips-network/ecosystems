@@ -15,7 +15,7 @@ import {SubListsBatchJobData} from './enqueueJobs';
 
 type TransactionExecutionStrategyContext = {
   job: SubListsBatchJobData;
-  dripListId: AccountId;
+  ecosystemMainAccountId: AccountId;
 };
 
 export const createNonSponsoredTransactionStrategy =
@@ -26,13 +26,13 @@ export const createNonSponsoredTransactionStrategy =
     return {
       executeTx: async ({
         job: {subList, chainId, ecosystemId},
-        dripListId,
+        ecosystemMainAccountId,
       }: TransactionExecutionStrategyContext) => {
         const subListCreationTxsByReceiversHash =
           await populateSubListCreationTxsByReceiversHash(
             subList,
             chainId,
-            dripListId,
+            ecosystemMainAccountId,
           );
         const txs = [...subListCreationTxsByReceiversHash.values()].map(
           ({tx}) => tx,

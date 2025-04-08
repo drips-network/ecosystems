@@ -4,7 +4,7 @@ import {
   assertIsUUID,
 } from '../../../common/application/assertions';
 import {processQueue} from '../infrastructure/queue/processQueue';
-import convertToDripList from './convertToDripList';
+import convertToEcosystemMainAccount from './convertToEcosystemMainAccount';
 import {enqueueJobs} from '../infrastructure/queue/enqueueJobs';
 import batchSubLists from './batchSubLists';
 import {
@@ -25,15 +25,19 @@ export const handleDeployEcosystem = async ({
   await verifyCanDeployEcosystem(id);
 
   const nodes = await getEcosystemNodes(id);
-  const dripList = await convertToDripList(nodes, ownerAddress, chainId);
+  const ecosystemMainAccount = await convertToEcosystemMainAccount(
+    nodes,
+    ownerAddress,
+    chainId,
+  );
 
   await transitionEcosystemState(id, 'DEPLOYMENT_STARTED');
 
   // If there are no sub-lists, deploy the ecosystem directly. There is no need to enqueue jobs.
-  if (dripList.subLists.length === 0) {
+  if (ecosystemMainAccount.subLists.length === 0) {
     void deployEcosystem({
       chainId,
-      dripList,
+      ecosystemMainAccount,
       ecosystemId: id,
       ownerAddress,
     });
@@ -41,7 +45,7 @@ export const handleDeployEcosystem = async ({
     return;
   }
 
-  const subListBatches = batchSubLists(dripList);
+  const subListBatches = batchSubLists(ecosystemMainAccount);
 
   const queue = createQueue(id, chainId);
 
@@ -53,7 +57,7 @@ export const handleDeployEcosystem = async ({
     ecosystemId: id,
   });
 
-  void processQueue(queue, dripList);
+  void processQueue(queue, ecosystemMainAccount);
 
   return queue.name;
 };

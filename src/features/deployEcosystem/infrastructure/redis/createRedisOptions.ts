@@ -8,7 +8,7 @@ import {AccountId} from '../../../../common/domain/types';
 export type SuccessfulSubListCreationResult = {
   success: true;
   batchSubListReceivers: SubListReceiver[];
-  parentDripListId: AccountId;
+  ecosystemMainAccountId: AccountId;
 };
 
 export type FailedSubListCreationResult = {
