@@ -1,5 +1,6 @@
 import {Node} from '../../../common/domain/entities.ts/Node';
 import {ProjectReceiver, Receiver} from './types';
+import {logger} from '../../../common/infrastructure/logger';
 import unreachable from '../../../common/application/unreachable';
 import {AccountId, ChainId, OxString} from '../../../common/domain/types';
 import calculateRandomSalt from '../infrastructure/blockchain/calculateRandomSalt';
@@ -30,6 +31,61 @@ export type NormalizedEcosystemMainAccount = {
 // 200 (sub-lists) × 200 (receivers per sub-list) = 40,000 accounts
 const MAX_SPLITS_RECEIVERS = 200; // Hardcoded in Drips contracts.
 const MAX_NUMBER_OF_NODES = 40000; // Calculated based on `MAX_SPLITS_RECEIVERS`.
+const NORMALIZATION_TARGET = 1_000_000;
+
+/**
+ * Helper to normalize a list of weights ensuring every entry gets at least 1
+ * and the total equals NORMALIZATION_TARGET.
+ */
+function normalizeWeights(
+  weights: number[],
+  target: number = NORMALIZATION_TARGET,
+): number[] {
+  const n = weights.length;
+  if (n === 0) return [];
+  // Guard: Ensure total raw weight > 0.
+  const totalRaw = weights.reduce((sum, w) => sum + w, 0);
+  if (totalRaw === 0) {
+    throw new Error('Cannot normalize weights: total raw weight is 0.');
+  }
+  // Each entry gets at least 1.
+  const base = 1;
+  const remainingTarget = target - n;
+  const prelim = weights.map(w => Math.floor((w / totalRaw) * remainingTarget));
+  const baseAllocations = prelim.map(p => p + base);
+  let allocated = baseAllocations.reduce((sum, a) => sum + a, 0);
+  const diff = target - allocated;
+  // Compute fractional remainders for each weight.
+  const fractions = weights.map(
+    w =>
+      (w / totalRaw) * remainingTarget -
+      Math.floor((w / totalRaw) * remainingTarget),
+  );
+  // Distribute any remaining weight one by one to those with the highest fraction.
+  const indicesSorted = Array.from({length: n}, (_, i) => i).sort(
+    (i, j) => fractions[j] - fractions[i],
+  );
+  for (let i = 0; i < diff; i++) {
+    baseAllocations[indicesSorted[i]] += 1;
+  }
+  allocated = baseAllocations.reduce((sum, a) => sum + a, 0);
+  if (allocated !== target) {
+    logger.error(
+      `Normalization error: allocated total ${allocated} does not equal target ${target}.`,
+    );
+    throw new Error('Normalization failed to meet target.');
+  }
+  // Debug: Ensure no weight is zero.
+  baseAllocations.forEach((w, i) => {
+    if (w <= 0) {
+      logger.error(
+        `Normalized weight for index ${i} is ${w}. Expected at least 1.`,
+      );
+      throw new Error('A normalized weight ended up as zero or negative.');
+    }
+  });
+  return baseAllocations;
+}
 
 /**
  * Converts a flat list of nodes into a `EcosystemMainAccount` structure.
@@ -39,24 +95,19 @@ const MAX_NUMBER_OF_NODES = 40000; // Calculated based on `MAX_SPLITS_RECEIVERS`
  * 3. Sub-lists can only contain direct receivers.
  *
  * The algorithm works as follows:
- * 1. If all nodes fit within `MAX_SPLITS_RECEIVERS`, creates a single level with no sub-lists
+ * 1. If all nodes fit within `MAX_SPLITS_RECEIVERS`, creates a single level with no sub-lists.
  * 2. Otherwise:
  *
  *    a. Calculates minimum number of sub-lists (x) needed using the formula:
  *       x = ceil((totalIDs - `MAX_SPLITS_RECEIVERS`) / (`MAX_SPLITS_RECEIVERS` - 1))
  *
- *    b. Reserves x slots in the first level for sub-list references
+ *    b. Reserves x slots in the first level for sub-list references.
  *
- *    c. Uses remaining (`MAX_SPLITS_RECEIVERS` - x) slots for direct receivers in the first level
+ *    c. Uses remaining (`MAX_SPLITS_RECEIVERS` - x) slots for direct receivers in the first level.
  *
- *    d. Distributes remaining nodes across sub-lists
+ *    d. Distributes remaining nodes across sub-lists.
  *
- * The function returns a `EcosystemMainAccount` object containing:
- * - `rawReceivers`: array of direct `ProjectReceiver` objects in the first level.
- * - `subListReceivers`: array of arrays, each representing a sub-list of `SubListReceiver` objects.
- *
- * Note that the algorithm is designed to work with max 40,000 nodes.
- *
+ * The function returns a `NormalizedEcosystemMainAccount` object.
  */
 export default async function convertToEcosystemMainAccount(
   nodes: Node[],
@@ -78,8 +129,14 @@ export default async function convertToEcosystemMainAccount(
   const allNodesExceptRoot = nodes.filter(
     node => node.projectName !== 'root' && node.absoluteWeight > 0,
   ) as (Node & {projectAccountId: string; url: string})[];
+
+  // Verify and log if any node had zero weight (they should be filtered out).
   if (allNodesExceptRoot.length === 0) {
     throw new Error('No valid nodes with positive weight found.');
+  } else {
+    logger.debug(
+      `Filtered nodes: kept ${allNodesExceptRoot.length} entries with positive weight.`,
+    );
   }
 
   // Simple case: everything fits as direct receivers.
@@ -89,7 +146,6 @@ export default async function convertToEcosystemMainAccount(
         projectReceivers: allNodesExceptRoot.map(mapToProjectReceiver),
         subListReceivers: [],
       },
-      ownerAddress,
       chainId,
     );
   }
@@ -114,26 +170,18 @@ export default async function convertToEcosystemMainAccount(
   // Distribute remaining accounts across sub-lists.
   const subListReceivers: ProjectReceiver[][] = [];
   let processedAccounts = 0;
-
-  // Loop until all sub-list nodes are processed.
   while (processedAccounts < subListsCount) {
     const start = processedAccounts;
-    // Ensure we do not exceed the remaining nodes.
     const end = Math.min(start + MAX_SPLITS_RECEIVERS, subListsCount);
-
-    // Extract the slice for the current sub-list.
     const subListSlice = allNodesExceptRoot.slice(
       rawReceiversCount + start,
       rawReceiversCount + end,
     );
-
-    const mapped = subListSlice
-      .map(node => mapToProjectReceiver(node))
-      .filter(r => r.weight > 0);
-    if (mapped.length > 0) {
-      subListReceivers.push(mapped);
+    if (subListSlice.length > 0) {
+      subListReceivers.push(
+        subListSlice.map(node => mapToProjectReceiver(node)),
+      );
     }
-
     processedAccounts += subListSlice.length;
   }
 
@@ -141,11 +189,9 @@ export default async function convertToEcosystemMainAccount(
     {
       projectReceivers: allNodesExceptRoot
         .slice(0, rawReceiversCount)
-        .map(mapToProjectReceiver)
-        .filter(r => r.weight > 0),
+        .map(mapToProjectReceiver),
       subListReceivers,
     },
-    ownerAddress,
     chainId,
   );
 }
@@ -156,7 +202,6 @@ function mapToProjectReceiver(
   const [ownerName, repoName] = node.projectName.includes('/')
     ? node.projectName.split('/')
     : unreachable('Invalid project name format.');
-
   return {
     accountId: node.projectAccountId,
     weight: node.absoluteWeight,
@@ -173,63 +218,78 @@ function mapToProjectReceiver(
 /**
  * Returns a normalized version of the input `EcosystemMainAccount` structure.
  *
- * This function performs weight normalization at two levels:
+ * Normalization is done at two levels:
  *
- * 1. At the first level, it calculates a normalized weight for:
- *    - Each direct receiver in the `rawReceivers` array.
- *    - Each sub-list reference (based on the aggregate weight of its receivers).
+ * 1. At the root level, we normalize both direct receivers and sub-list references.
+ *    Instead of the simple Math.floor approach, we now use the normalization helper
+ *    to guarantee every entry receives at least 1 and the total sum equals NORMALIZATION_TARGET.
  *
- *    The sum of these normalized weights will be exactly 1000000.
+ * 2. For each sub-list, we perform a separate normalization using the same helper.
  *
- *
- * 2. For each sub-list in the `subListReceivers` array, it normalizes its receivers
- *    so that they sum to 1000000.
- *
- * The returned structure extends the original `EcosystemMainAccount` with:
- * - `projectReceivers`: normalized version of `rawReceivers`
- * - `subLists`: normalized version of `subListReceivers` with an additional
- *   `normalizedWeight` property that indicates the weight allocated to each sub-list.
+ * Debug logs and guards are added to flag any issues.
  */
-
 async function normalizeEcosystemMainAccount(
   root: EcosystemMainAccount,
-  ownerAddress: OxString,
   chainId: ChainId,
 ): Promise<NormalizedEcosystemMainAccount> {
+  // 1. Compute raw weights.
   const rawReceiversTotalWeight = root.projectReceivers.reduce(
     (sum, r) => sum + r.weight,
     0,
   );
-
   const rawSubListsWeights = root.subListReceivers.map(subList =>
     subList.reduce((sum, r) => sum + r.weight, 0),
   );
-
   const totalRaw =
     rawReceiversTotalWeight + rawSubListsWeights.reduce((sum, w) => sum + w, 0);
+
   if (totalRaw === 0) {
     throw new Error('Total weight at root cannot be zero.');
   }
 
-  const normalizedProjectReceivers = largestRemainderNormalize(
-    root.projectReceivers.filter(r => r.weight > 0),
-    r => r.weight,
-    (r, weight) => ({...r, weight}),
+  // Prepare weights for normalization.
+  const projectWeights = root.projectReceivers.map(r => r.weight);
+  const subListWeights = rawSubListsWeights;
+
+  // Normalize weights for direct receivers.
+  const normalizedProjectWeights = normalizeWeights(projectWeights);
+  // Normalize weights for each sub-list reference.
+  const normalizedSubListWeights = normalizeWeights(subListWeights);
+
+  // Debug: Log normalization summaries.
+  logger.debug(
+    `Normalized root-level weights for ${root.projectReceivers.length} direct receivers: ${normalizedProjectWeights}.`,
+  );
+  logger.debug(
+    `Normalized root-level weights for ${root.subListReceivers.length} sub-list references: ${normalizedSubListWeights}.`,
   );
 
-  const normalizedSubListRefs = largestRemainderNormalize(
-    rawSubListsWeights,
-    w => w,
-    (_, weight) => weight,
-  );
+  // Map normalized weights back to project receivers.
+  const normalizedProjectReceivers = root.projectReceivers.map((r, i) => ({
+    ...r,
+    weight: normalizedProjectWeights[i],
+  }));
 
+  // Normalize each sub-list separately.
   const normalizedSubLists = root.subListReceivers.map((subList, index) => {
+    // Get the raw weights for this sub-list.
+    const subWeights = subList.map(r => r.weight);
+    const normalizedWeights = normalizeWeights(subWeights);
+    const receivers = subList.map((r, i) => ({
+      ...r,
+      weight: normalizedWeights[i],
+    }));
+    // Debug log for each sub-list.
+    logger.debug(
+      `Sub-list ${index} normalized weights: ${normalizedWeights}. Total: ${normalizedWeights.reduce((sum, w) => sum + w, 0)}.`,
+    );
     return {
-      receivers: normalizeSplitsReceivers(subList.filter(r => r.weight > 0)),
-      normalizedWeight: normalizedSubListRefs[index],
+      receivers,
+      normalizedWeight: normalizedSubListWeights[index],
     };
   });
 
+  // 2. Prepare final data needed to deploy.
   const salt = calculateRandomSalt();
   const deployerAddress = getWallet(chainId).address as OxString;
   const dripListId = (
@@ -246,51 +306,4 @@ async function normalizeEcosystemMainAccount(
     projectReceivers: normalizedProjectReceivers,
     subLists: normalizedSubLists,
   };
-}
-
-function normalizeSplitsReceivers<T extends Receiver>(receivers: T[]): T[] {
-  const filtered = receivers.filter(r => r.weight > 0);
-  if (filtered.length === 0) {
-    throw new Error('Cannot normalize receivers with zero total weight.');
-  }
-
-  return largestRemainderNormalize(
-    filtered,
-    r => r.weight,
-    (r, weight) => ({...r, weight}),
-  );
-}
-
-export function largestRemainderNormalize<T>(
-  items: T[],
-  getWeight: (item: T) => number,
-  setWeight: (item: T, weight: number) => T,
-  total = 1_000_000,
-): T[] {
-  const filtered = items.filter(item => getWeight(item) > 0);
-  if (filtered.length === 0) {
-    throw new Error('Cannot normalize empty or zero-weight list.');
-  }
-
-  const rawTotal = filtered.reduce((sum, item) => sum + getWeight(item), 0);
-
-  const idealShares = filtered.map(
-    item => (getWeight(item) / rawTotal) * total,
-  );
-  const floored = idealShares.map(Math.floor);
-  const remainders = idealShares.map((value, i) => value - floored[i]);
-
-  const allocated = floored.reduce((sum, val) => sum + val, 0);
-  const remaining = total - allocated;
-
-  const indicesByRemainder = remainders
-    .map((r, i) => ({i, r}))
-    .sort((a, b) => b.r - a.r)
-    .map(x => x.i);
-
-  for (let i = 0; i < remaining; i++) {
-    floored[indicesByRemainder[i]] += 1;
-  }
-
-  return filtered.map((item, i) => setWeight(item, floored[i]));
 }
