@@ -267,39 +267,30 @@ export function largestRemainderNormalize<T>(
   setWeight: (item: T, weight: number) => T,
   total = 1_000_000,
 ): T[] {
-  if (items.length === 0) {
-    throw new Error('Cannot normalize an empty list.');
+  const filtered = items.filter(item => getWeight(item) > 0);
+  if (filtered.length === 0) {
+    throw new Error('Cannot normalize empty or zero-weight list.');
   }
 
-  const rawTotal = items.reduce((sum, item) => sum + getWeight(item), 0);
-  if (rawTotal === 0) {
-    throw new Error('Total weight must not be zero.');
-  }
+  const rawTotal = filtered.reduce((sum, item) => sum + getWeight(item), 0);
 
-  const idealShares = items.map(item => (getWeight(item) / rawTotal) * total);
-  const flooredShares = idealShares.map(Math.floor);
-  const remainders = idealShares.map((value, i) => value - flooredShares[i]);
+  const idealShares = filtered.map(
+    item => (getWeight(item) / rawTotal) * total,
+  );
+  const floored = idealShares.map(Math.floor);
+  const remainders = idealShares.map((value, i) => value - floored[i]);
 
-  const allocated = flooredShares.reduce((sum, val) => sum + val, 0);
+  const allocated = floored.reduce((sum, val) => sum + val, 0);
   const remaining = total - allocated;
 
   const indicesByRemainder = remainders
-    .map((remainder, index) => ({index, remainder}))
-    .sort((a, b) => b.remainder - a.remainder)
-    .map(x => x.index);
-
-  const adjustedShares = [...flooredShares];
+    .map((r, i) => ({i, r}))
+    .sort((a, b) => b.r - a.r)
+    .map(x => x.i);
 
   for (let i = 0; i < remaining; i++) {
-    adjustedShares[indicesByRemainder[i]] += 1;
+    floored[indicesByRemainder[i]] += 1;
   }
 
-  const finalTotal = adjustedShares.reduce((sum, w) => sum + w, 0);
-  if (finalTotal !== total) {
-    throw new Error(
-      `Normalization failed: final sum is ${finalTotal}, expected ${total}.`,
-    );
-  }
-
-  return items.map((item, i) => setWeight(item, adjustedShares[i]));
+  return filtered.map((item, i) => setWeight(item, floored[i]));
 }
