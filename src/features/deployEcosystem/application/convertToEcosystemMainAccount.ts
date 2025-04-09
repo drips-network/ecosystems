@@ -266,7 +266,6 @@ async function normalizeEcosystemMainAccount(
   );
   const rootCombinedTotal = rootNormalizedProjectTotal + rootNormalizedSubTotal;
 
-  // INFO log: Beautified summary.
   logger.info(`
 ──────────────────────────────────────────────
 Root-Level Normalization Summary:
