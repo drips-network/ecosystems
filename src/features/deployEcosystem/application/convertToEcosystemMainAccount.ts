@@ -71,7 +71,7 @@ function normalizeWeights(
     throw new Error('Normalization failed to meet target.');
   }
   baseAllocations.forEach((w, i) => {
-    if (w <= 0) {
+    if (w < 1) {
       logger.error(
         `Normalized weight for index ${i} is ${w}. Expected at least 1.`,
       );
