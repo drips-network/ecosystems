@@ -261,7 +261,7 @@ function normalizeSplitsReceivers<T extends Receiver>(receivers: T[]): T[] {
   );
 }
 
-function largestRemainderNormalize<T>(
+export function largestRemainderNormalize<T>(
   items: T[],
   getWeight: (item: T) => number,
   setWeight: (item: T, weight: number) => T,
@@ -280,7 +280,8 @@ function largestRemainderNormalize<T>(
   const flooredShares = idealShares.map(Math.floor);
   const remainders = idealShares.map((value, i) => value - flooredShares[i]);
 
-  let remaining = total - flooredShares.reduce((sum, val) => sum + val, 0);
+  const allocated = flooredShares.reduce((sum, val) => sum + val, 0);
+  const remaining = total - allocated;
 
   const indicesByRemainder = remainders
     .map((remainder, index) => ({index, remainder}))
@@ -289,17 +290,15 @@ function largestRemainderNormalize<T>(
 
   const adjustedShares = [...flooredShares];
 
-  // Guarantee minimum weight of 1 if item had non-zero original weight
-  for (let i = 0; i < adjustedShares.length; i++) {
-    if (adjustedShares[i] === 0 && getWeight(items[i]) > 0 && remaining > 0) {
-      adjustedShares[i]++;
-      remaining--;
-    }
-  }
-
-  // Distribute remaining by remainder
   for (let i = 0; i < remaining; i++) {
     adjustedShares[indicesByRemainder[i]] += 1;
+  }
+
+  const finalTotal = adjustedShares.reduce((sum, w) => sum + w, 0);
+  if (finalTotal !== total) {
+    throw new Error(
+      `Normalization failed: final sum is ${finalTotal}, expected ${total}.`,
+    );
   }
 
   return items.map((item, i) => setWeight(item, adjustedShares[i]));
