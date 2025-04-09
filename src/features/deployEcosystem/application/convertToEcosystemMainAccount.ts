@@ -1,5 +1,5 @@
 import {Node} from '../../../common/domain/entities.ts/Node';
-import {ProjectReceiver, Receiver} from './types';
+import {ProjectReceiver} from './types';
 import {logger} from '../../../common/infrastructure/logger';
 import unreachable from '../../../common/application/unreachable';
 import {AccountId, ChainId, OxString} from '../../../common/domain/types';
@@ -75,7 +75,7 @@ function normalizeWeights(
     );
     throw new Error('Normalization failed to meet target.');
   }
-  // Debug: Ensure no weight is zero.
+
   baseAllocations.forEach((w, i) => {
     if (w <= 0) {
       logger.error(
@@ -217,16 +217,6 @@ function mapToProjectReceiver(
 
 /**
  * Returns a normalized version of the input `EcosystemMainAccount` structure.
- *
- * Normalization is done at two levels:
- *
- * 1. At the root level, we normalize both direct receivers and sub-list references.
- *    Instead of the simple Math.floor approach, we now use the normalization helper
- *    to guarantee every entry receives at least 1 and the total sum equals NORMALIZATION_TARGET.
- *
- * 2. For each sub-list, we perform a separate normalization using the same helper.
- *
- * Debug logs and guards are added to flag any issues.
  */
 async function normalizeEcosystemMainAccount(
   root: EcosystemMainAccount,
@@ -256,7 +246,6 @@ async function normalizeEcosystemMainAccount(
   // Normalize weights for each sub-list reference.
   const normalizedSubListWeights = normalizeWeights(subListWeights);
 
-  // Debug: Log normalization summaries.
   logger.debug(
     `Normalized root-level weights for ${root.projectReceivers.length} direct receivers: ${normalizedProjectWeights}.`,
   );
@@ -279,7 +268,7 @@ async function normalizeEcosystemMainAccount(
       ...r,
       weight: normalizedWeights[i],
     }));
-    // Debug log for each sub-list.
+
     logger.debug(
       `Sub-list ${index} normalized weights: ${normalizedWeights}. Total: ${normalizedWeights.reduce((sum, w) => sum + w, 0)}.`,
     );
