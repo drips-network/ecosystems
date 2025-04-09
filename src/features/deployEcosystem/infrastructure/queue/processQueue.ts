@@ -6,11 +6,11 @@ import {finalizeDeployment} from './finalizeDeployment';
 import {saveProcessedJob} from '../../../../common/infrastructure/redis/saveProcessedJob';
 import createRedisOptions from '../redis/createRedisOptions';
 import {SubListsBatchJobData} from './enqueueJobs';
-import {NormalizedDripList} from '../../application/convertToDripList';
+import {NormalizedEcosystemMainAccount} from '../../application/convertToEcosystemMainAccount';
 
 export const processQueue = async (
   queue: BeeQueue<SubListsBatchJobData>,
-  dripList: NormalizedDripList,
+  ecosystemMainAccount: NormalizedEcosystemMainAccount,
 ) => {
   queue.process(async job => {
     const {chainId, ecosystemId, totalTxs, ownerAddress} = job.data;
@@ -25,14 +25,14 @@ export const processQueue = async (
       const subListReceivers =
         await createNonSponsoredTransactionStrategy().executeTx({
           job: job.data,
-          dripListId: dripList.accountId,
+          ecosystemMainAccountId: ecosystemMainAccount.accountId,
         });
 
       const {isProcessingCompleted, progress} = await saveProcessedJob(
         job,
         {
           success: true as const,
-          parentDripListId: dripList.accountId,
+          ecosystemMainAccountId: ecosystemMainAccount.accountId,
           batchSubListReceivers: subListReceivers,
         },
         createRedisOptions(ecosystemId, chainId),
@@ -46,7 +46,7 @@ export const processQueue = async (
         await finalizeDeployment({
           queue,
           chainId,
-          dripList,
+          ecosystemMainAccount,
           ecosystemId,
           ownerAddress,
           totalJobs: totalTxs,

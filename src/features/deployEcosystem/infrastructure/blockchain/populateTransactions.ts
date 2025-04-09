@@ -20,10 +20,9 @@ import {Receiver} from '../../application/types';
 import {executeDripsReadMethod} from '../../../../common/infrastructure/contracts/drips/drips';
 import {populateImmutableSplitsDriverWriteTx} from '../../../../common/infrastructure/contracts/immutableSplits/immutableSplits';
 import {SubList} from '../../application/batchSubLists';
-import {UUID} from 'crypto';
 import getWallet from '../../../../common/infrastructure/contracts/getWallet';
 
-export async function populateDripListCreationTxs(
+export async function populateEcosystemMainAccountCreationTxs(
   listId: string,
   salt: bigint,
   ipfsHash: IpfsHash,
@@ -33,7 +32,7 @@ export async function populateDripListCreationTxs(
 ) {
   const deployerAddress = getWallet(chainId).address as OxString;
 
-  const dripListCreationTx = await populateNftDriverWriteTx({
+  const ecosystemMainAccountCreationTx = await populateNftDriverWriteTx({
     functionName: 'safeMintWithSalt',
     args: [
       toBigInt(salt),
@@ -50,7 +49,7 @@ export async function populateDripListCreationTxs(
 
   const formattedReceivers = formatSplitReceivers(receivers);
 
-  const setDripListSplitsTx = await populateNftDriverWriteTx({
+  const setEcosystemMainAccountSplitsTx = await populateNftDriverWriteTx({
     functionName: 'setSplits',
     args: [toBigInt(listId), formattedReceivers],
     chainId,
@@ -63,8 +62,8 @@ export async function populateDripListCreationTxs(
   });
 
   return [
-    convertToCallerCall(dripListCreationTx),
-    convertToCallerCall(setDripListSplitsTx),
+    convertToCallerCall(ecosystemMainAccountCreationTx),
+    convertToCallerCall(setEcosystemMainAccountSplitsTx),
     convertToCallerCall(transferOwnershipTx),
   ];
 }
@@ -72,8 +71,7 @@ export async function populateDripListCreationTxs(
 export async function populateSubListCreationTxsByReceiversHash(
   subList: SubList,
   chainId: ChainId,
-  ecosystemId: UUID,
-  parentDripListId: AccountId,
+  ecosystemMainAccountId: AccountId,
 ) {
   const map: Map<
     OxString,
@@ -84,8 +82,7 @@ export async function populateSubListCreationTxsByReceiversHash(
   > = new Map();
 
   const ipfsHash = await pinSubListMetadata(
-    ecosystemId,
-    parentDripListId,
+    ecosystemMainAccountId,
     subList.receivers,
   );
 
@@ -120,11 +117,9 @@ export async function populateSubListCreationTxsByReceiversHash(
 }
 
 export function formatSplitReceivers(receivers: Receiver[]): SplitsReceiver[] {
-  const validReceivers = receivers.filter(r => r.weight > 0);
-
   // Splits receivers must be sorted by user ID, deduplicated, and without weights <= 0.
 
-  const uniqueReceivers = validReceivers.reduce((unique: Receiver[], o) => {
+  const uniqueReceivers = receivers.reduce((unique: Receiver[], o) => {
     if (
       !unique.some(
         (obj: Receiver) =>

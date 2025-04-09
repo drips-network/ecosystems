@@ -52,7 +52,7 @@ export async function setMainIdentityForEcosystem(
   txHash: OxString,
   ecosystemId: UUID,
   chainId: ChainId,
-  preCalculatedDripListId: AccountId,
+  preCalculatedEcosystemMainAccountId: AccountId,
   ownerAddress: OxString,
 ) {
   const wallet = getWallet(chainId);
@@ -107,7 +107,9 @@ export async function setMainIdentityForEcosystem(
     const transferredOwner = getAddress(
       '0x' + transferOwnershipEvent.topics[2].slice(26),
     );
-    if (transferredOwner !== ownerAddress) {
+    if (
+      transferredOwner.toLocaleLowerCase() !== ownerAddress.toLocaleLowerCase()
+    ) {
       unreachable(
         `Transfer event owner mismatch. Expected: ${ownerAddress}, got: ${transferredOwner}.`,
       );
@@ -120,16 +122,16 @@ export async function setMainIdentityForEcosystem(
     const accountId = AbiCoder.defaultAbiCoder()
       .decode(['uint256'], transferOwnershipEvent.topics[3])[0]
       .toString();
-    if (accountId !== preCalculatedDripListId) {
+    if (accountId !== preCalculatedEcosystemMainAccountId) {
       unreachable(
-        `Drip list ID mismatch. Expected: ${preCalculatedDripListId}, got: ${accountId}.`,
+        `Ecosystem Main Account ID mismatch. Expected: ${preCalculatedEcosystemMainAccountId}, got: ${accountId}.`,
       );
     }
 
     // Update the ecosystem with the accountId.
     await dataSource
       .getRepository(Ecosystem)
-      .update({id: ecosystemId}, {accountId: accountId});
+      .update({id: ecosystemId}, {accountId});
     logger.info(
       `Main identity set to '${accountId}' for ecosystem '${ecosystemId}'.`,
     );

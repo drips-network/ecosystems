@@ -1,4 +1,4 @@
-import {NormalizedDripList} from './convertToDripList';
+import {NormalizedEcosystemMainAccount} from './convertToEcosystemMainAccount';
 import {Receiver} from './types';
 
 export type SubList = {
@@ -7,15 +7,15 @@ export type SubList = {
 };
 
 export default function batchSubLists(
-  dripList: NormalizedDripList,
+  ecosystemMainAccount: NormalizedEcosystemMainAccount,
 ): SubList[][] {
-  const totalImmutableSplitsCreationTxs = dripList.subLists.length;
+  const totalImmutableSplitsCreationTxs = ecosystemMainAccount.subLists.length;
 
   // TODO: For now we split into batches of 20. To be improved if needed.
   const batches: SubList[][] = [];
   for (let i = 0; i < totalImmutableSplitsCreationTxs; i += 20) {
     batches.push(
-      dripList.subLists.slice(i, i + 20).map(p => ({
+      ecosystemMainAccount.subLists.slice(i, i + 20).map(p => ({
         receivers: p.receivers,
         weight: p.normalizedWeight,
       })),

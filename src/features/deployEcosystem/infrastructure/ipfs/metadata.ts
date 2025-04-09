@@ -46,6 +46,7 @@ export async function pinEcosystemMetadata(
   recipients: (ProjectReceiver | SubListReceiver)[],
 ): Promise<IpfsHash> {
   const {name, description} = await getEcosystemById(ecosystemId);
+
   const dripListMetadata = {
     driver: 'nft',
     describes: {
@@ -59,57 +60,68 @@ export async function pinEcosystemMetadata(
     recipients,
   } as LatestVersion<typeof nftDriverAccountMetadataParser>;
 
-  // Ensure the data follows the correct schema at runtime.
   nftDriverAccountMetadataParser.parseLatest(dripListMetadata);
 
-  const res = await pinata.pinJSONToIPFS(dripListMetadata, {
-    pinataOptions: {
-      cidVersion: 0,
-    },
-  });
-
-  const ipfsHash = res.IpfsHash;
+  const ipfsHash = await pinJSON(dripListMetadata);
 
   logger.info(
-    `Drip List '${dripListId}' metadata pinned to IPFS with hash '${ipfsHash}'.`,
+    `Ecosystem Main Account '${dripListId}' metadata pinned to IPFS with hash '${ipfsHash}'.`,
   );
 
   return ipfsHash;
 }
 
 export async function pinSubListMetadata(
-  ecosystemId: UUID,
-  parentDripListId: AccountId,
+  ecosystemMainAccountId: AccountId,
   receivers: Receiver[],
 ): Promise<IpfsHash> {
-  const {name, description} = await getEcosystemById(ecosystemId);
   const subListMetadata = {
     driver: 'immutable-splits',
-    name,
-    description,
-    type: 'sub-list',
+    type: 'subList',
     isVisible: true,
     recipients: receivers,
     parent: {
       driver: 'nft',
-      accountId: parentDripListId,
+      accountId: ecosystemMainAccountId,
+      type: 'ecosystem',
+    },
+    root: {
+      driver: 'nft',
+      accountId: ecosystemMainAccountId,
+      type: 'ecosystem',
     },
   } as LatestVersion<typeof immutableSplitsDriverMetadataParser>;
 
-  // Ensure the data follows the correct schema at runtime.
   immutableSplitsDriverMetadataParser.parseLatest(subListMetadata);
 
-  const res = await pinata.pinJSONToIPFS(subListMetadata, {
+  const ipfsHash = await pinJSON(subListMetadata);
+
+  logger.info(
+    `Sub-list for parent Ecosystem Main Account '${ecosystemMainAccountId}' metadata pinned to IPFS with hash '${ipfsHash}'.`,
+  );
+
+  return ipfsHash;
+}
+
+async function pinJSON(data: unknown): Promise<IpfsHash> {
+  if (config.fakePinataUrl) {
+    const res = await fetch(`${config.fakePinataUrl}/pinning/pinJSONToIPFS`, {
+      method: 'POST',
+      body: JSON.stringify({pinataContent: data}),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const resBody = z.object({IpfsHash: z.string()}).parse(await res.json());
+    return resBody.IpfsHash;
+  }
+
+  const res = await pinata.pinJSONToIPFS(data, {
     pinataOptions: {
       cidVersion: 0,
     },
   });
 
-  const ipfsHash = res.IpfsHash;
-
-  logger.info(
-    `Sub-list for parent Drip List '${parentDripListId}' metadata pinned to IPFS with hash '${ipfsHash}'.`,
-  );
-
-  return ipfsHash;
+  return res.IpfsHash;
 }
