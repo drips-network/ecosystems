@@ -8,26 +8,30 @@ import convertToEcosystemMainAccount from './convertToEcosystemMainAccount';
 import {enqueueJobs} from '../infrastructure/queue/enqueueJobs';
 import batchSubLists from './batchSubLists';
 import {
-  verifyCanDeployEcosystem,
+  getEcosystemById,
   getEcosystemNodes,
 } from '../infrastructure/database/ecosystemRepository';
 import createQueue from './createQueue';
 import {deployEcosystem} from '../infrastructure/queue/finalizeDeployment';
 import transitionEcosystemState from '../../../common/infrastructure/stateMachine/transitionEcosystemState';
+import {BadRequestError} from '../../../common/application/HttpError';
 
 export const handleDeployEcosystem = async ({
-  body: {chainId, ownerAddress},
   params: {id},
 }: DeployEcosystemRequestDto) => {
   assertIsUUID(id);
-  assertIsOxString(ownerAddress);
 
-  await verifyCanDeployEcosystem(id);
+  const {chainId, ownerAddress, state} = await getEcosystemById(id);
+
+  if (state !== 'pending_deployment') {
+    throw new BadRequestError(
+      `Ecosystem '${id}' cannot be deployed while in '${state}' state.`,
+    );
+  }
 
   const nodes = await getEcosystemNodes(id);
   const ecosystemMainAccount = await convertToEcosystemMainAccount(
     nodes,
-    ownerAddress,
     chainId,
   );
 

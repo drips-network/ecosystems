@@ -105,7 +105,6 @@ function normalizeWeights(
  */
 export default async function convertToEcosystemMainAccount(
   nodes: Node[],
-  ownerAddress: OxString,
   chainId: ChainId,
 ): Promise<NormalizedEcosystemMainAccount> {
   if (nodes.length > MAX_NUMBER_OF_NODES) {

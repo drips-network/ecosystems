@@ -9,7 +9,6 @@ export const deployEcosystemController =
   async (req: Request, res: Response): Promise<void> => {
     const parsedRequest = deployEcosystemRequestSchema.safeParse({
       params: req.params,
-      body: req.body,
     });
     if (!parsedRequest.success) {
       const formattedErrors = parsedRequest.error.issues.map(issue => ({
