@@ -32,6 +32,8 @@ function loadConfig(): Config {
       ? parseInt(process.env.CONFIRMATIONS, 10)
       : undefined,
     fakePinataUrl: process.env.FAKE_PINATA_URL,
+    disableGitHubValidation: process.env.DISABLE_GITHUB_VALIDATION === 'true',
+    disableRpcCache: process.env.DISABLE_RPC_CACHE === 'true',
   };
 
   try {
