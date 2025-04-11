@@ -1,8 +1,5 @@
 import {UUID} from 'crypto';
-import {
-  BadRequestError,
-  NotFoundError,
-} from '../../../../common/application/HttpError';
+import {NotFoundError} from '../../../../common/application/HttpError';
 import {Ecosystem} from '../../../../common/domain/entities.ts/Ecosystem';
 import {dataSource} from '../../../../common/infrastructure/datasource';
 import {Node} from '../../../../common/domain/entities.ts/Node';
@@ -22,16 +19,6 @@ export async function getEcosystemById(ecosystemId: UUID) {
   }
 
   return ecosystem;
-}
-
-export async function verifyCanDeployEcosystem(id: UUID) {
-  const ecosystem = await getEcosystemById(id);
-
-  if (ecosystem.state !== 'pending_deployment') {
-    throw new BadRequestError(
-      `Ecosystem '${id}' cannot be deployed while in '${ecosystem.state}' state.`,
-    );
-  }
 }
 
 export async function getEcosystemNodes(ecosystemId: UUID): Promise<Node[]> {
