@@ -36,7 +36,7 @@ Object.values(SUPPORTED_CHAIN_IDS).forEach(chain => {
   providers[chain] = new FailoverJsonRpcProvider(
     rpcEndpoints,
     undefined,
-    undefined,
+    config.disableRpcCache ? {cacheTimeout: 0} : undefined,
     {
       logger: console,
     },

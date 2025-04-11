@@ -11,6 +11,7 @@ import {
   Forge,
 } from '../../../../common/infrastructure/contracts/repoDriver/repoDriver';
 import {hexlify, toUtf8Bytes} from 'ethers';
+import {config} from '../../../../config/configLoader';
 
 export type SuccessfulNodeVerificationResult = {
   success: true;
@@ -50,6 +51,27 @@ export default async function verifyNode({
   }
 
   const [expectedOwner, expectedRepo] = projectName.split('/');
+
+  if (config.disableGitHubValidation) {
+    const repoDriverId = (
+      await executeRepoDriverReadMethod({
+        functionName: 'calcAccountId',
+        args: [
+          Forge.GitHub,
+          hexlify(toUtf8Bytes(`${projectName}`)) as OxString,
+        ],
+        chainId,
+      })
+    ).toString() as AccountId;
+
+    return {
+      success: true,
+      url: `https://github.com/${expectedOwner}/${expectedRepo}`,
+      originalProjectName: projectName,
+      verifiedProjectName: projectName,
+      repoDriverId,
+    };
+  }
 
   try {
     const {data, headers} = await (
@@ -94,7 +116,7 @@ export default async function verifyNode({
           Forge.GitHub,
           hexlify(toUtf8Bytes(`${verifiedName}`)) as OxString,
         ],
-        chainId: chainId,
+        chainId,
       })
     ).toString() as AccountId;
 
