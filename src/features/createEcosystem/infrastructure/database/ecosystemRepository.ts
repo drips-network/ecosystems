@@ -4,7 +4,7 @@ import unreachable from '../../../../common/application/unreachable';
 import {Ecosystem} from '../../../../common/domain/entities.ts/Ecosystem';
 import {Edge} from '../../../../common/domain/entities.ts/Edge';
 import {Node} from '../../../../common/domain/entities.ts/Node';
-import {ProjectName} from '../../../../common/domain/types';
+import {OxString, ProjectName} from '../../../../common/domain/types';
 import {NewEcosystemRequestDto} from '../../api/createEcosystemDtos';
 import {dataSource} from '../../../../common/infrastructure/datasource';
 import {NotFoundError} from '../../../../common/application/HttpError';
@@ -254,10 +254,10 @@ export const saveEcosystemIfNotExist = async (
     avatar,
     chainId,
     description,
-    ownerAddress,
+    ownerAddress: ownerAddress as OxString,
     id: ecosystemId,
     rawGraph: graph,
-    metadata: metadata,
+    metadata,
     state: 'processing_graph',
   });
 

@@ -10,7 +10,7 @@ import {
   Check,
 } from 'typeorm';
 import {Node} from './Node';
-import {AccountId} from '../types';
+import {AccountId, ChainId, OxString} from '../types';
 import {EcosystemState} from '../../infrastructure/stateMachine/ecosystemStateMachine';
 
 type EmojiAvatar = {
@@ -36,7 +36,7 @@ export class Ecosystem {
   public state!: EcosystemState;
 
   @Column({type: 'varchar', length: 64})
-  public chainId!: string;
+  public chainId!: ChainId;
 
   @Column({type: 'jsonb'})
   public metadata!: Record<string, unknown>[];
@@ -51,7 +51,7 @@ export class Ecosystem {
   public accountId!: AccountId | null; // The `NftDriver` account ID of the main account for this ecosystem. `null` until the ecosystem is `deployed`.
 
   @Column({type: 'varchar', length: 42})
-  public ownerAddress!: string | null;
+  public ownerAddress!: OxString;
 
   @OneToMany(() => Node, node => node.ecosystem)
   public nodes!: Node[];
