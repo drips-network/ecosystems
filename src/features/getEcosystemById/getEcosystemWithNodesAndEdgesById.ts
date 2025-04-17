@@ -1,16 +1,16 @@
-import {UUID} from 'crypto';
 import {NotFoundError} from '../../common/application/HttpError';
 import {Ecosystem} from '../../common/domain/entities.ts/Ecosystem';
 import {Edge} from '../../common/domain/entities.ts/Edge';
 import {dataSource} from '../../common/infrastructure/datasource';
 import {Node} from '../../common/domain/entities.ts/Node';
+import {isUUID} from '../../common/application/assertions';
 
-export async function getEcosystemWithNodesAndEdgesById(id: UUID): Promise<{
+export async function getEcosystemWithNodesAndEdgesById(id: string): Promise<{
   ecosystem: Ecosystem;
   edges: Edge[];
 }> {
   const ecosystemRepository = dataSource.getRepository(Ecosystem);
-  const ecosystem = await ecosystemRepository
+  const queryBuilder = ecosystemRepository
     .createQueryBuilder('ecosystem')
     .select([
       'ecosystem.id',
@@ -21,12 +21,18 @@ export async function getEcosystemWithNodesAndEdgesById(id: UUID): Promise<{
       'ecosystem.metadata',
       'ecosystem.avatar',
       'ecosystem.color',
-    ])
-    .where('ecosystem.id = :id', {id})
-    .getOne();
+    ]);
+
+  const ecosystem = await (
+    isUUID(id)
+      ? queryBuilder.where('ecosystem.id = :id', {id})
+      : queryBuilder.where('ecosystem.accountId = :id', {id})
+  ).getOne();
 
   if (!ecosystem) {
-    throw new NotFoundError(`Ecosystem with ID '${id}' not found.`);
+    throw new NotFoundError(
+      `Ecosystem with ${isUUID(id) ? 'ID' : 'accountId'} '${id}' not found.`,
+    );
   }
 
   const nodeRepository = dataSource.getRepository(Node);
@@ -38,7 +44,7 @@ export async function getEcosystemWithNodesAndEdgesById(id: UUID): Promise<{
       'node.absoluteWeight',
       'node.projectName',
     ])
-    .where('node.ecosystemId = :id', {id})
+    .where('node.ecosystemId = :id', {id: ecosystem.id})
     .getMany();
 
   // Assign the optimized nodes array to the ecosystem.

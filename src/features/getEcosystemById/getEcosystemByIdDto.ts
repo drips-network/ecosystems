@@ -3,7 +3,7 @@ import {ECOSYSTEM_STATES} from '../../common/infrastructure/stateMachine/ecosyst
 import {hexColorSchema} from '../../common/application/schemas';
 
 export const getEcosystemByIdRequestSchema = z.object({
-  id: z.string().uuid(),
+  id: z.string(),
 });
 
 const metadataSchema = z.array(
