@@ -3,14 +3,11 @@ import {
   GetEcosystemByIdResponseDto,
 } from './getEcosystemByIdDto';
 import {getEcosystemWithNodesAndEdgesById} from './getEcosystemWithNodesAndEdgesById';
-import {assertIsUUID} from '../../common/application/assertions';
 
 export const handleGetEcosystemById = async (
   request: GetEcosystemByIdRequestDto,
 ): Promise<GetEcosystemByIdResponseDto> => {
   const {id} = request;
-  assertIsUUID(id);
-
   const {ecosystem, edges} = await getEcosystemWithNodesAndEdgesById(id);
 
   return {

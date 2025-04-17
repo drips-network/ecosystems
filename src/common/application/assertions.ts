@@ -1,6 +1,13 @@
 import {UUID} from 'crypto';
 import {OxString, ProjectName} from '../domain/types';
 
+export function isUUID(value: unknown): value is UUID {
+  const uuidRegex =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+  return typeof value === 'string' && uuidRegex.test(value);
+}
+
 export function assertIsProjectName(
   value: unknown,
 ): asserts value is ProjectName {
@@ -10,10 +17,7 @@ export function assertIsProjectName(
 }
 
 export function assertIsUUID(value: unknown): asserts value is UUID {
-  const uuidRegex =
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-  if (typeof value !== 'string' || !uuidRegex.test(value)) {
+  if (!isUUID(value)) {
     throw new Error(`Value '${value}' is not a valid UUID.`);
   }
 }
