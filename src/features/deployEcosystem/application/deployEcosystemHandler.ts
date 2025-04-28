@@ -1,8 +1,5 @@
 import {DeployEcosystemRequestDto} from '../api/deployEcosystemDto';
-import {
-  assertIsOxString,
-  assertIsUUID,
-} from '../../../common/application/assertions';
+import {assertIsUUID} from '../../../common/application/assertions';
 import {processQueue} from '../infrastructure/queue/processQueue';
 import convertToEcosystemMainAccount from './convertToEcosystemMainAccount';
 import {enqueueJobs} from '../infrastructure/queue/enqueueJobs';
