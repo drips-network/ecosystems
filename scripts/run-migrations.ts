@@ -13,6 +13,8 @@ export default async function runMigrations() {
 
   await dataSource.initialize();
 
+  await dataSource.query('CREATE SCHEMA IF NOT EXISTS "public";');
+
   try {
     const migrations = await dataSource.runMigrations();
 
