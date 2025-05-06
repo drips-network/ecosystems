@@ -21,6 +21,7 @@ const emojiAvatarSchema = z.object({
 const ecosystemSchema = z.object({
   id: z.string(),
   accountId: z.string().nullable(),
+  ownerAddress: z.string(),
   name: z.string(),
   description: z.string().nullable().optional(),
   nodeCount: z.number().nullable(),

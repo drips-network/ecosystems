@@ -15,6 +15,7 @@ export const handleGetEcosystems =
       id: ecosystem.id,
       state: ecosystem.state,
       accountId: ecosystem.accountId,
+      ownerAddress: ecosystem.ownerAddress,
       name: ecosystem.name,
       avatar: ecosystem.avatar,
       description: ecosystem.description,

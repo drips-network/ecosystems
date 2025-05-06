@@ -14,6 +14,7 @@ export const handleGetEcosystemById = async (
     id: ecosystem.id,
     state: ecosystem.state,
     accountId: ecosystem.accountId,
+    ownerAddress: ecosystem.ownerAddress,
     name: ecosystem.name,
     description: ecosystem.description,
     metadata: ecosystem.metadata as GetEcosystemByIdResponseDto['metadata'],

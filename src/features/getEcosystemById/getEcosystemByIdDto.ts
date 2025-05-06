@@ -50,6 +50,7 @@ const getEcosystemByIdResponseSchema = z.object({
   id: z.string(),
   state: z.enum(ECOSYSTEM_STATES),
   accountId: z.string().nullable(),
+  ownerAddress: z.string(),
   name: z.string(),
   description: z.string().nullable().optional(),
   metadata: metadataSchema,

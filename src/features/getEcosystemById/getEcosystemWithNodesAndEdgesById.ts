@@ -16,6 +16,7 @@ export async function getEcosystemWithNodesAndEdgesById(id: string): Promise<{
       'ecosystem.id',
       'ecosystem.state',
       'ecosystem.accountId',
+      'ecosystem.ownerAddress',
       'ecosystem.name',
       'ecosystem.description',
       'ecosystem.metadata',
