@@ -10,6 +10,8 @@ dataSource
   .then(async () => {
     logger.info('Database connected successfully.');
 
+    logger.info(`config: ${JSON.stringify(config, null, 2)}`);
+
     await launchDevQueueDashboard();
 
     app.listen(config.port, () => {
