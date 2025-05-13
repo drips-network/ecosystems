@@ -42,7 +42,7 @@ export function keyValueToMetadata({
 
 export async function pinEcosystemMetadata(
   ecosystemId: UUID,
-  dripListId: AccountId,
+  ecosystemMainAccountId: AccountId,
   recipients: (ProjectReceiver | SubListReceiver)[],
 ): Promise<IpfsHash> {
   const {name, description} = await getEcosystemById(ecosystemId);
@@ -51,7 +51,7 @@ export async function pinEcosystemMetadata(
     driver: 'nft',
     describes: {
       driver: 'nft',
-      accountId: dripListId,
+      accountId: ecosystemMainAccountId,
     },
     name,
     description,
@@ -65,7 +65,7 @@ export async function pinEcosystemMetadata(
   const ipfsHash = await pinJSON(dripListMetadata);
 
   logger.info(
-    `Ecosystem Main Account '${dripListId}' metadata pinned to IPFS with hash '${ipfsHash}'.`,
+    `Ecosystem Main Account '${ecosystemMainAccountId}' metadata pinned to IPFS with hash '${ipfsHash}'.`,
   );
 
   return ipfsHash;

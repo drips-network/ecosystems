@@ -5,6 +5,7 @@ type ContractsConfig = {
   DRIPS: OxString;
   CALLER: OxString;
   REPO_DRIVER: OxString;
+  REPO_SUB_ACCOUNT_DRIVER: OxString | undefined; // TODO: remove this when repo sub account driver is deployed on all chains.
   NFT_DRIVER: OxString;
   IMMUTABLE_SPLITS: OxString;
   NATIVE_TOKEN_UNWRAPPER: OxString | undefined;
@@ -20,6 +21,7 @@ export const contractsConfigByChainId: Record<ChainId, ContractsConfig> = {
     NFT_DRIVER: '0xcf9c49B0962EDb01Cdaa5326299ba85D72405258',
     IMMUTABLE_SPLITS: '0x1212975c0642B07F696080ec1916998441c2b774',
     NATIVE_TOKEN_UNWRAPPER: undefined,
+    REPO_SUB_ACCOUNT_DRIVER: undefined,
   },
   // Polygon Amoy
   80002: {
@@ -30,6 +32,7 @@ export const contractsConfigByChainId: Record<ChainId, ContractsConfig> = {
     NFT_DRIVER: '0xDafd9Ab96E62941808caa115D184D30A200FA777',
     IMMUTABLE_SPLITS: '0x65A48270e51A7aa901fD8fc42ab9cDddb50aff05',
     NATIVE_TOKEN_UNWRAPPER: undefined,
+    REPO_SUB_ACCOUNT_DRIVER: undefined,
   },
   // Optimism Sepolia
   11155420: {
@@ -40,6 +43,7 @@ export const contractsConfigByChainId: Record<ChainId, ContractsConfig> = {
     NFT_DRIVER: '0xdC773a04C0D6EFdb80E7dfF961B6a7B063a28B44',
     IMMUTABLE_SPLITS: '0xC3C1955bb50AdA4dC8a55aBC6d4d2a39242685c1',
     NATIVE_TOKEN_UNWRAPPER: undefined,
+    REPO_SUB_ACCOUNT_DRIVER: '0x5cEB4E59A1f91caC75017163B4D0663F155e9B77',
   },
   // Sepolia
   11155111: {
@@ -50,6 +54,7 @@ export const contractsConfigByChainId: Record<ChainId, ContractsConfig> = {
     NFT_DRIVER: '0xdC773a04C0D6EFdb80E7dfF961B6a7B063a28B44',
     IMMUTABLE_SPLITS: '0xC3C1955bb50AdA4dC8a55aBC6d4d2a39242685c1',
     NATIVE_TOKEN_UNWRAPPER: undefined,
+    REPO_SUB_ACCOUNT_DRIVER: undefined,
   },
   // Local testnet
   31337: {
@@ -60,6 +65,7 @@ export const contractsConfigByChainId: Record<ChainId, ContractsConfig> = {
     NFT_DRIVER: '0xf98e07d281Ff9b83612DBeF0A067d710716720eA',
     IMMUTABLE_SPLITS: '0x33a946e876C3bFb08636099238Db35a81dEf4b1E',
     NATIVE_TOKEN_UNWRAPPER: undefined,
+    REPO_SUB_ACCOUNT_DRIVER: '0xB8743C2bB8DF7399273aa7EE4cE8d4109Bec327F',
   },
   // Base Sepolia
   84532: {
@@ -70,6 +76,7 @@ export const contractsConfigByChainId: Record<ChainId, ContractsConfig> = {
     NFT_DRIVER: '0xDafd9Ab96E62941808caa115D184D30A200FA777',
     IMMUTABLE_SPLITS: '0x65A48270e51A7aa901fD8fc42ab9cDddb50aff05',
     NATIVE_TOKEN_UNWRAPPER: undefined,
+    REPO_SUB_ACCOUNT_DRIVER: undefined,
   },
   // Filecoin
   314: {
@@ -80,6 +87,7 @@ export const contractsConfigByChainId: Record<ChainId, ContractsConfig> = {
     NFT_DRIVER: '0x2F23217A87cAf04ae586eed7a3d689f6C48498dB',
     IMMUTABLE_SPLITS: '0x96EC722e1338f08bbd469b80394eE118a0bc6753',
     NATIVE_TOKEN_UNWRAPPER: '0x64e0d60C70e9778C2E649FfBc90259C86a6Bf396',
+    REPO_SUB_ACCOUNT_DRIVER: undefined,
   },
   // Metis
   1088: {
@@ -90,5 +98,6 @@ export const contractsConfigByChainId: Record<ChainId, ContractsConfig> = {
     NFT_DRIVER: '0x2F23217A87cAf04ae586eed7a3d689f6C48498dB',
     IMMUTABLE_SPLITS: '0x96EC722e1338f08bbd469b80394eE118a0bc6753',
     NATIVE_TOKEN_UNWRAPPER: undefined,
+    REPO_SUB_ACCOUNT_DRIVER: undefined,
   },
 };

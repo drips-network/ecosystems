@@ -190,7 +190,7 @@ function mapToProjectReceiver(
   return {
     accountId: node.projectAccountId,
     weight: node.absoluteWeight,
-    type: 'repoDriver',
+    type: 'repoSubAccountDriver',
     source: {
       url: node.url,
       forge: 'github',
