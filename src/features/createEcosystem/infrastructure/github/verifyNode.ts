@@ -12,7 +12,6 @@ import {
 } from '../../../../common/infrastructure/contracts/repoDriver/repoDriver';
 import {hexlify, toUtf8Bytes} from 'ethers';
 import {config} from '../../../../config/configLoader';
-import {executeRepoSubAccountDriverReadMethod} from '../../../../common/infrastructure/contracts/repoSubAccountDriver/repoSubAccountDriver';
 
 export type SuccessfulNodeVerificationResult = {
   success: true;
@@ -110,16 +109,13 @@ export default async function verifyNode({
       };
     }
 
-    const repoDriverId = await executeRepoDriverReadMethod({
-      functionName: 'calcAccountId',
-      args: [Forge.GitHub, hexlify(toUtf8Bytes(`${verifiedName}`)) as OxString],
-      chainId,
-    });
-
-    const repoSubAccountId = (
-      await executeRepoSubAccountDriverReadMethod({
+    const repoDriverId = (
+      await executeRepoDriverReadMethod({
         functionName: 'calcAccountId',
-        args: [repoDriverId],
+        args: [
+          Forge.GitHub,
+          hexlify(toUtf8Bytes(`${verifiedName}`)) as OxString,
+        ],
         chainId,
       })
     ).toString() as AccountId;
@@ -129,7 +125,7 @@ export default async function verifyNode({
       url,
       originalProjectName: projectName,
       verifiedProjectName: verifiedName,
-      repoDriverId: repoSubAccountId,
+      repoDriverId,
     };
   } catch (error) {
     // If the project was not found, consider it a failure, but a valid result.
