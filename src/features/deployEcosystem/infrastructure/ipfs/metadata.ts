@@ -45,7 +45,8 @@ export async function pinEcosystemMetadata(
   ecosystemMainAccountId: AccountId,
   recipients: (ProjectReceiver | SubListReceiver)[],
 ): Promise<IpfsHash> {
-  const {name, description} = await getEcosystemById(ecosystemId);
+  const {name, description, color, avatar} =
+    await getEcosystemById(ecosystemId);
 
   const dripListMetadata = {
     driver: 'nft',
@@ -58,6 +59,8 @@ export async function pinEcosystemMetadata(
     type: 'ecosystem',
     isVisible: true,
     recipients,
+    color,
+    avatar,
   } as LatestVersion<typeof nftDriverAccountMetadataParser>;
 
   nftDriverAccountMetadataParser.parseLatest(dripListMetadata);
