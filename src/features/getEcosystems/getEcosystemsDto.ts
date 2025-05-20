@@ -1,5 +1,6 @@
 import {z} from 'zod';
 import {ECOSYSTEM_STATES} from '../../common/infrastructure/stateMachine/ecosystemStateMachine';
+import {hexColorSchema} from '../../common/application/schemas';
 
 const metadataSchema = z.array(
   z.object({
@@ -28,6 +29,7 @@ const ecosystemSchema = z.object({
   metadata: metadataSchema,
   state: z.enum(ECOSYSTEM_STATES),
   avatar: emojiAvatarSchema,
+  color: hexColorSchema,
 });
 
 const getEcosystemsResponseSchema = z.array(ecosystemSchema);
