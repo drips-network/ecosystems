@@ -17,6 +17,7 @@ export const handleGetEcosystems =
       accountId: ecosystem.accountId,
       ownerAddress: ecosystem.ownerAddress,
       name: ecosystem.name,
+      color: ecosystem.color,
       avatar: ecosystem.avatar,
       description: ecosystem.description,
       nodeCount: Math.max(0, (ecosystem as any).nodeCount - 1), // Subtract 1 to exclude `root` node.
