@@ -11,10 +11,12 @@ const metadataSchema = z.array(
     icon: z.string(),
     title: z.string(),
     text: z.string().optional(),
-    link: z.object({
-      href: z.string(),
-      label: z.string(),
-    }),
+    link: z
+      .object({
+        href: z.string(),
+        label: z.string(),
+      })
+      .optional(),
   }),
 );
 

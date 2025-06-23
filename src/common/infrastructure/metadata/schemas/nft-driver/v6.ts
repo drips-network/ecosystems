@@ -15,7 +15,6 @@ const base = nftDriverAccountMetadataSchemaV5
     projects: true,
   })
   .extend({
-    isDripList: z.undefined().optional(),
     projects: z.undefined().optional(),
   });
 
