@@ -89,10 +89,9 @@ export async function calculateAbsolutePercentages(
       }
     }
 
-    // Only set to 0 if distributing 100% or more
-    if (totalOutgoingWeight >= 1) {
-      current.absoluteWeight = 0;
-    }
+    // Subtract the distributed weight from the current node
+    // The node keeps only the weight it didn't distribute
+    current.absoluteWeight *= 1 - totalOutgoingWeight;
   }
 
   // Create final mapping
