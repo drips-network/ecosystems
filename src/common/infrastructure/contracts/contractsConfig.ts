@@ -8,7 +8,7 @@ type ContractsConfig = {
   REPO_SUB_ACCOUNT_DRIVER: OxString | undefined; // TODO: remove this when repo sub account driver is deployed on all chains.
   NFT_DRIVER: OxString;
   IMMUTABLE_SPLITS: OxString;
-  NATIVE_TOKEN_UNWRAPPER: OxString | undefined;
+  NATIVE_TOKEN_UNWRAPPER: OxString | undefined; // TODO: remove this when repo sub account driver is deployed on all chains.
 };
 
 export const contractsConfigByChainId: Record<ChainId, ContractsConfig> = {
@@ -53,8 +53,8 @@ export const contractsConfigByChainId: Record<ChainId, ContractsConfig> = {
     REPO_DRIVER: '0xa71bdf410D48d4AA9aE1517A69D7E1Ef0c179b2B',
     NFT_DRIVER: '0xdC773a04C0D6EFdb80E7dfF961B6a7B063a28B44',
     IMMUTABLE_SPLITS: '0xC3C1955bb50AdA4dC8a55aBC6d4d2a39242685c1',
-    NATIVE_TOKEN_UNWRAPPER: undefined,
-    REPO_SUB_ACCOUNT_DRIVER: undefined,
+    NATIVE_TOKEN_UNWRAPPER: '0xf470601db8f7eebac6612a16bf15daed0f414f6a',
+    REPO_SUB_ACCOUNT_DRIVER: '0x317400fd9dfdad78d53a34455d89beb8f03f90ee',
   },
   // Local testnet
   31337: {
