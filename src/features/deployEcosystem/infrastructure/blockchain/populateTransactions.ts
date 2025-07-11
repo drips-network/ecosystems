@@ -21,6 +21,7 @@ import {executeDripsReadMethod} from '../../../../common/infrastructure/contract
 import {populateImmutableSplitsDriverWriteTx} from '../../../../common/infrastructure/contracts/immutableSplits/immutableSplits';
 import {SubList} from '../../application/batchSubLists';
 import getWallet from '../../../../common/infrastructure/contracts/getWallet';
+import {logger} from '../../../../common/infrastructure/logger';
 
 export async function populateEcosystemMainAccountCreationTxs(
   listId: string,
@@ -48,6 +49,14 @@ export async function populateEcosystemMainAccountCreationTxs(
   });
 
   const formattedReceivers = formatSplitReceivers(receivers);
+  logger.info('Receivers context for ecosystem main account creation', {
+    listId,
+    receiversCount: formattedReceivers.length,
+    receivers: formattedReceivers.map(r => ({
+      accountId: r.accountId.toString(),
+      weight: r.weight,
+    })),
+  });
 
   const setEcosystemMainAccountSplitsTx = await populateNftDriverWriteTx({
     functionName: 'setSplits',
@@ -87,6 +96,15 @@ export async function populateSubListCreationTxsByReceiversHash(
   );
 
   const formattedReceivers = formatSplitReceivers(subList.receivers);
+  logger.info('Receivers context for sub list creation', {
+    ecosystemMainAccountId,
+    subListWeight: subList.weight,
+    receiversCount: formattedReceivers.length,
+    receivers: formattedReceivers.map(r => ({
+      accountId: r.accountId.toString(),
+      weight: r.weight,
+    })),
+  });
 
   const tx = await populateImmutableSplitsDriverWriteTx({
     functionName: 'createSplits',
