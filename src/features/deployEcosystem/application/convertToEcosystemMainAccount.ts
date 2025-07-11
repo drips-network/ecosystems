@@ -6,7 +6,6 @@ import {AccountId, ChainId, OxString} from '../../../common/domain/types';
 import calculateRandomSalt from '../infrastructure/blockchain/calculateRandomSalt';
 import {executeNftDriverReadMethod} from '../../../common/infrastructure/contracts/nftDriver/nftDriver';
 import getWallet from '../../../common/infrastructure/contracts/getWallet';
-import {executeRepoSubAccountDriverReadMethod} from '../../../common/infrastructure/contracts/repoSubAccountDriver/repoSubAccountDriver';
 import {toBigInt} from 'ethers';
 
 type EcosystemMainAccount = {
@@ -134,7 +133,7 @@ export default async function convertToEcosystemMainAccount(
     return normalizeEcosystemMainAccount(
       {
         projectReceivers: await Promise.all(
-          allNodesExceptRoot.map(node => mapToProjectReceiver(node, chainId)),
+          allNodesExceptRoot.map(node => mapToProjectReceiver(node)),
         ),
         subListReceivers: [],
       },
@@ -168,9 +167,7 @@ export default async function convertToEcosystemMainAccount(
     );
     if (subListSlice.length > 0) {
       subListReceivers.push(
-        await Promise.all(
-          subListSlice.map(node => mapToProjectReceiver(node, chainId)),
-        ),
+        await Promise.all(subListSlice.map(node => mapToProjectReceiver(node))),
       );
     }
     processedAccounts += subListSlice.length;
@@ -181,7 +178,7 @@ export default async function convertToEcosystemMainAccount(
       projectReceivers: await Promise.all(
         allNodesExceptRoot
           .slice(0, rawReceiversCount)
-          .map(node => mapToProjectReceiver(node, chainId)),
+          .map(node => mapToProjectReceiver(node)),
       ),
       subListReceivers,
     },
@@ -191,20 +188,13 @@ export default async function convertToEcosystemMainAccount(
 
 async function mapToProjectReceiver(
   node: Node & {projectAccountId: string; url: string},
-  chainId: ChainId,
 ): Promise<ProjectReceiver> {
   const [ownerName, repoName] = node.projectName.includes('/')
     ? node.projectName.split('/')
     : unreachable('Invalid project name format.');
 
   return {
-    accountId: (
-      await executeRepoSubAccountDriverReadMethod({
-        functionName: 'calcAccountId',
-        args: [toBigInt(node.projectAccountId)],
-        chainId,
-      })
-    ).toString() as AccountId,
+    accountId: node.projectAccountId,
     weight: node.absoluteWeight,
     type: 'repoSubAccountDriver',
     source: {
