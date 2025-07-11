@@ -12,6 +12,7 @@ import {
 } from '../../../../common/infrastructure/contracts/repoDriver/repoDriver';
 import {hexlify, toUtf8Bytes} from 'ethers';
 import {config} from '../../../../config/configLoader';
+import {executeRepoSubAccountDriverReadMethod} from '../../../../common/infrastructure/contracts/repoSubAccountDriver/repoSubAccountDriver';
 
 export type SuccessfulNodeVerificationResult = {
   success: true;
@@ -53,13 +54,16 @@ export default async function verifyNode({
   const [expectedOwner, expectedRepo] = projectName.split('/');
 
   if (config.disableGitHubValidation) {
-    const repoDriverId = (
-      await executeRepoDriverReadMethod({
+    const repoDriverId = await executeRepoDriverReadMethod({
+      functionName: 'calcAccountId',
+      args: [Forge.GitHub, hexlify(toUtf8Bytes(`${projectName}`)) as OxString],
+      chainId,
+    });
+
+    const repoSubAccountId = (
+      await executeRepoSubAccountDriverReadMethod({
         functionName: 'calcAccountId',
-        args: [
-          Forge.GitHub,
-          hexlify(toUtf8Bytes(`${projectName}`)) as OxString,
-        ],
+        args: [repoDriverId],
         chainId,
       })
     ).toString() as AccountId;
@@ -69,7 +73,7 @@ export default async function verifyNode({
       url: `https://github.com/${expectedOwner}/${expectedRepo}`,
       originalProjectName: projectName,
       verifiedProjectName: projectName,
-      repoDriverId,
+      repoDriverId: repoSubAccountId,
     };
   }
 
@@ -109,13 +113,16 @@ export default async function verifyNode({
       };
     }
 
-    const repoDriverId = (
-      await executeRepoDriverReadMethod({
+    const repoDriverId = await executeRepoDriverReadMethod({
+      functionName: 'calcAccountId',
+      args: [Forge.GitHub, hexlify(toUtf8Bytes(`${verifiedName}`)) as OxString],
+      chainId,
+    });
+
+    const repoSubAccountId = (
+      await executeRepoSubAccountDriverReadMethod({
         functionName: 'calcAccountId',
-        args: [
-          Forge.GitHub,
-          hexlify(toUtf8Bytes(`${verifiedName}`)) as OxString,
-        ],
+        args: [repoDriverId],
         chainId,
       })
     ).toString() as AccountId;
@@ -125,7 +132,7 @@ export default async function verifyNode({
       url,
       originalProjectName: projectName,
       verifiedProjectName: verifiedName,
-      repoDriverId,
+      repoDriverId: repoSubAccountId,
     };
   } catch (error) {
     // If the project was not found, consider it a failure, but a valid result.
