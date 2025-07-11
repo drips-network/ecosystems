@@ -6,7 +6,6 @@ import {AccountId, ChainId, OxString} from '../../../common/domain/types';
 import calculateRandomSalt from '../infrastructure/blockchain/calculateRandomSalt';
 import {executeNftDriverReadMethod} from '../../../common/infrastructure/contracts/nftDriver/nftDriver';
 import getWallet from '../../../common/infrastructure/contracts/getWallet';
-import {toBigInt} from 'ethers';
 
 type EcosystemMainAccount = {
   projectReceivers: ProjectReceiver[];
@@ -25,7 +24,7 @@ export type NormalizedEcosystemMainAccount = {
   projectReceivers: ProjectReceiver[];
 };
 
-const MAX_SPLITS_RECEIVERS = 200; // Hardcoded in Drips contracts.
+const MAX_SPLITS_RECEIVERS = 2; // Hardcoded in Drips contracts.
 const MAX_NUMBER_OF_NODES = 40000; // Calculated based on `MAX_SPLITS_RECEIVERS`.
 const NORMALIZATION_TARGET = 1_000_000;
 
