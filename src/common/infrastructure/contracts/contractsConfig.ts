@@ -87,7 +87,7 @@ export const contractsConfigByChainId: Record<ChainId, ContractsConfig> = {
     NFT_DRIVER: '0x2F23217A87cAf04ae586eed7a3d689f6C48498dB',
     IMMUTABLE_SPLITS: '0x96EC722e1338f08bbd469b80394eE118a0bc6753',
     NATIVE_TOKEN_UNWRAPPER: '0x64e0d60C70e9778C2E649FfBc90259C86a6Bf396',
-    REPO_SUB_ACCOUNT_DRIVER: undefined,
+    REPO_SUB_ACCOUNT_DRIVER: '0x925a69f6d07ee4c753df139bcc2a946e1d1ee92a',
   },
   // Metis
   1088: {
@@ -98,6 +98,6 @@ export const contractsConfigByChainId: Record<ChainId, ContractsConfig> = {
     NFT_DRIVER: '0x2F23217A87cAf04ae586eed7a3d689f6C48498dB',
     IMMUTABLE_SPLITS: '0x96EC722e1338f08bbd469b80394eE118a0bc6753',
     NATIVE_TOKEN_UNWRAPPER: undefined,
-    REPO_SUB_ACCOUNT_DRIVER: undefined,
+    REPO_SUB_ACCOUNT_DRIVER: '0x925a69f6d07ee4c753df139bcc2a946e1d1ee92a',
   },
 };
