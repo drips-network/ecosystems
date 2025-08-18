@@ -7,6 +7,7 @@ export const SUPPORTED_CHAIN_IDS = [
   '84532',
   '314',
   '1088',
+  '10',
 ] as const;
 export type ChainId = (typeof SUPPORTED_CHAIN_IDS)[number];
 
