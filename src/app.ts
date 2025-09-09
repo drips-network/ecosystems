@@ -22,14 +22,6 @@ const authenticateApiKey = (
   }
 };
 
-app.use(authenticateApiKey);
-app.use(express.json({limit: '50mb'}));
-app.use('/api', createEcosystemRouter);
-app.use('/api', getEcosystemsRouter);
-app.use('/api', getEcosystemByIdRouter);
-app.use('/api', deployEcosystemRouter);
-app.use(errorHandler);
-
 app.get('/health', async (_, res) => {
   const redisHealthy = (await redis.ping()) === 'PONG';
   const dbHealthy = dataSource.isInitialized;
@@ -44,3 +36,11 @@ app.get('/health', async (_, res) => {
     });
   }
 });
+
+app.use(authenticateApiKey);
+app.use(express.json({limit: '50mb'}));
+app.use('/api', createEcosystemRouter);
+app.use('/api', getEcosystemsRouter);
+app.use('/api', getEcosystemByIdRouter);
+app.use('/api', deployEcosystemRouter);
+app.use(errorHandler);
