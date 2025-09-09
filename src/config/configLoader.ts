@@ -16,6 +16,7 @@ function loadConfig(): Config {
       filename: process.env.LOG_FILE,
     },
     redisConnectionString: process.env.REDIS_CONNECTION_STRING,
+    redisUseIpv6: process.env.REDIS_USE_IPV6 === 'true',
     rpc: process.env.RPC_CONFIG
       ? rpcConfigSchema.parse(JSON.parse(process.env.RPC_CONFIG))
       : undefined,

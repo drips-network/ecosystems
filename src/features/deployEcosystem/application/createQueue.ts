@@ -13,7 +13,10 @@ export default function createQueue(ecosystemId: UUID, chainId: string) {
     removeOnFailure: true,
     removeOnSuccess: true,
     activateDelayedJobs: true,
-    redis: {url: config.redisConnectionString},
+    redis: {
+      url: config.redisConnectionString,
+      family: config.redisUseIpv6 ? 'IPv6' : undefined,
+    },
   });
 
   logger.info(

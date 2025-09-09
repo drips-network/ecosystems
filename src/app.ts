@@ -4,6 +4,8 @@ import {getEcosystemsRouter} from './features/getEcosystems/getEcosystemsRouter'
 import {getEcosystemByIdRouter} from './features/getEcosystemById/getEcosystemByIdRouter';
 import {errorHandler} from './common/infrastructure/errorHandler';
 import {deployEcosystemRouter} from './features/deployEcosystem/api/deployEcosystemRouter';
+import redis from './common/infrastructure/redis';
+import { dataSource } from './common/infrastructure/datasource';
 
 export const app = express();
 
@@ -19,6 +21,21 @@ const authenticateApiKey = (
     res.status(401).json({message: 'Unauthorized'});
   }
 };
+
+app.get('/health', async (_, res) => {
+  const redisHealthy = (await redis.ping()) === 'PONG';
+  const dbHealthy = dataSource.isInitialized;
+
+  if (redisHealthy && dbHealthy) {
+    res.status(200).send('OK');
+  } else {
+    res.status(500).json({
+      message: 'Unhealthy',
+      redis: redisHealthy ? 'healthy' : 'unhealthy',
+      database: dbHealthy ? 'healthy' : 'unhealthy',
+    });
+  }
+});
 
 app.use(authenticateApiKey);
 app.use(express.json({limit: '50mb'}));

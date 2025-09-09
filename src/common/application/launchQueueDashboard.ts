@@ -1,12 +1,11 @@
 import express, {Router} from 'express';
 import Arena from 'bull-arena';
 import BeeQueue from 'bee-queue';
-import Redis from 'ioredis';
 import {RequestHandler} from 'express';
 import {config} from '../../config/configLoader';
+import redis from '../infrastructure/redis';
 
 let arenaRouter: Router | null = null;
-const redis = new Redis(config.redisConnectionString);
 
 export const getQueuesFromRedis = async (): Promise<
   {
