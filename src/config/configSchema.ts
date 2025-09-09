@@ -28,6 +28,7 @@ export const configSchema = z.object({
   databaseConnectionString: z.string(),
   logger: loggingConfigSchema,
   redisConnectionString: z.string(),
+  redisUseIpv6: z.boolean().default(false),
   gitHubToken: z.string(),
   rpc: rpcConfigSchema,
   walletPrivateKey: z.string(),
