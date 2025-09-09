@@ -26,7 +26,10 @@ export const handleCreateEcosystem = async (
     removeOnFailure: true,
     removeOnSuccess: true,
     activateDelayedJobs: true,
-    redis: {url: config.redisConnectionString},
+    redis: {
+      url: config.redisConnectionString,
+      family: config.redisUseIpv6 ? 'IPv6' : undefined,
+    },
   });
   logger.info(
     `Created project verification queue '${queueKey}' for ecosystem '${ecosystemId}'.`,
