@@ -6,9 +6,10 @@ type ContractsConfig = {
   CALLER: OxString;
   REPO_DRIVER: OxString;
   REPO_SUB_ACCOUNT_DRIVER: OxString | undefined; // TODO: remove this when repo sub account driver is deployed on all chains.
+  REPO_DEADLINE_DRIVER: OxString | undefined;
   NFT_DRIVER: OxString;
   IMMUTABLE_SPLITS: OxString;
-  NATIVE_TOKEN_UNWRAPPER: OxString | undefined; // TODO: remove this when repo sub account driver is deployed on all chains.
+  NATIVE_TOKEN_UNWRAPPER: OxString | undefined; // TODO: remove this when native token unwrapper is deployed on all chains.
 };
 
 export const contractsConfigByChainId: Record<ChainId, ContractsConfig> = {
@@ -22,6 +23,7 @@ export const contractsConfigByChainId: Record<ChainId, ContractsConfig> = {
     IMMUTABLE_SPLITS: '0x1212975c0642B07F696080ec1916998441c2b774',
     NATIVE_TOKEN_UNWRAPPER: '0xa4d564894eb4b318e06adbc284295b6597a22019',
     REPO_SUB_ACCOUNT_DRIVER: '0xc219395880fa72e3ad9180b8878e0d39d144130b',
+    REPO_DEADLINE_DRIVER: undefined,
   },
   // Polygon Amoy
   80002: {
@@ -33,6 +35,7 @@ export const contractsConfigByChainId: Record<ChainId, ContractsConfig> = {
     IMMUTABLE_SPLITS: '0x65A48270e51A7aa901fD8fc42ab9cDddb50aff05',
     NATIVE_TOKEN_UNWRAPPER: undefined,
     REPO_SUB_ACCOUNT_DRIVER: undefined,
+    REPO_DEADLINE_DRIVER: undefined,
   },
   // Optimism Sepolia
   11155420: {
@@ -44,6 +47,7 @@ export const contractsConfigByChainId: Record<ChainId, ContractsConfig> = {
     IMMUTABLE_SPLITS: '0x1346abCa70e010fe8B01C2A7424dE4E83921018D',
     NATIVE_TOKEN_UNWRAPPER: '0x0288C45cA3ae6d226f3fCC45c340A13914f0FaF2',
     REPO_SUB_ACCOUNT_DRIVER: '0xe077e0D50fB60b900467F4a44DF7b49deB41097d',
+    REPO_DEADLINE_DRIVER: undefined,
   },
   // Optimism Mainnet
   10: {
@@ -55,6 +59,7 @@ export const contractsConfigByChainId: Record<ChainId, ContractsConfig> = {
     IMMUTABLE_SPLITS: '0x96EC722e1338f08bbd469b80394eE118a0bc6753',
     NATIVE_TOKEN_UNWRAPPER: '0x64e0d60C70e9778C2E649FfBc90259C86a6Bf396',
     REPO_SUB_ACCOUNT_DRIVER: '0x925a69f6d07ee4c753df139bcc2a946e1d1ee92a',
+    REPO_DEADLINE_DRIVER: undefined,
   },
   // Sepolia
   11155111: {
@@ -66,6 +71,7 @@ export const contractsConfigByChainId: Record<ChainId, ContractsConfig> = {
     IMMUTABLE_SPLITS: '0xC3C1955bb50AdA4dC8a55aBC6d4d2a39242685c1',
     NATIVE_TOKEN_UNWRAPPER: '0xf470601db8f7eebac6612a16bf15daed0f414f6a',
     REPO_SUB_ACCOUNT_DRIVER: '0x317400fd9dfdad78d53a34455d89beb8f03f90ee',
+    REPO_DEADLINE_DRIVER: undefined,
   },
   // Local testnet
   31337: {
@@ -77,6 +83,7 @@ export const contractsConfigByChainId: Record<ChainId, ContractsConfig> = {
     IMMUTABLE_SPLITS: '0x33a946e876C3bFb08636099238Db35a81dEf4b1E',
     NATIVE_TOKEN_UNWRAPPER: '0xC203cF8A0B0594fD404fe97725802bE59eF64194',
     REPO_SUB_ACCOUNT_DRIVER: '0xB8743C2bB8DF7399273aa7EE4cE8d4109Bec327F',
+    REPO_DEADLINE_DRIVER: undefined,
   },
   // Base Sepolia
   84532: {
@@ -88,6 +95,7 @@ export const contractsConfigByChainId: Record<ChainId, ContractsConfig> = {
     IMMUTABLE_SPLITS: '0x65A48270e51A7aa901fD8fc42ab9cDddb50aff05',
     NATIVE_TOKEN_UNWRAPPER: undefined,
     REPO_SUB_ACCOUNT_DRIVER: undefined,
+    REPO_DEADLINE_DRIVER: undefined,
   },
   // Filecoin
   314: {
@@ -99,6 +107,7 @@ export const contractsConfigByChainId: Record<ChainId, ContractsConfig> = {
     IMMUTABLE_SPLITS: '0x96EC722e1338f08bbd469b80394eE118a0bc6753',
     NATIVE_TOKEN_UNWRAPPER: '0x64e0d60C70e9778C2E649FfBc90259C86a6Bf396',
     REPO_SUB_ACCOUNT_DRIVER: '0x925a69f6d07ee4c753df139bcc2a946e1d1ee92a',
+    REPO_DEADLINE_DRIVER: undefined,
   },
   // Metis
   1088: {
@@ -110,5 +119,6 @@ export const contractsConfigByChainId: Record<ChainId, ContractsConfig> = {
     IMMUTABLE_SPLITS: '0x96EC722e1338f08bbd469b80394eE118a0bc6753',
     NATIVE_TOKEN_UNWRAPPER: undefined,
     REPO_SUB_ACCOUNT_DRIVER: '0x925a69f6d07ee4c753df139bcc2a946e1d1ee92a',
+    REPO_DEADLINE_DRIVER: undefined,
   },
 };
