@@ -70,4 +70,10 @@ export class Ecosystem {
 
   @Column({type: 'varchar', length: 9})
   color!: string;
+
+  @Column({type: 'timestamp', nullable: true})
+  deadline!: Date | null;
+
+  @Column({type: 'varchar', length: 200, nullable: true})
+  refundAccountId!: AccountId | null;
 }

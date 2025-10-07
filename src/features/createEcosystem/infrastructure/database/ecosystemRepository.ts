@@ -4,16 +4,17 @@ import unreachable from '../../../../common/application/unreachable';
 import {Ecosystem} from '../../../../common/domain/entities.ts/Ecosystem';
 import {Edge} from '../../../../common/domain/entities.ts/Edge';
 import {Node} from '../../../../common/domain/entities.ts/Node';
-import {OxString, ProjectName} from '../../../../common/domain/types';
+import {
+  AccountId,
+  OxString,
+  ProjectName,
+} from '../../../../common/domain/types';
 import {NewEcosystemRequestDto} from '../../api/createEcosystemDtos';
 import {dataSource} from '../../../../common/infrastructure/datasource';
 import {NotFoundError} from '../../../../common/application/HttpError';
 import {assertIsProjectName} from '../../../../common/application/assertions';
 import {logger} from '../../../../common/infrastructure/logger';
-import {
-  ProjectVerificationResult,
-  SuccessfulProjectVerificationResult,
-} from '../redis/createRedisOptions';
+import {SuccessfulProjectVerificationResult} from '../redis/createRedisOptions';
 
 export async function getEcosystemById(
   ecosystemId: UUID,
@@ -247,6 +248,8 @@ export const saveEcosystemIfNotExist = async (
     description,
     avatar,
     color,
+    deadline,
+    refundAccountId,
   } = newEcosystem;
   const entity = repository.create({
     name,
@@ -259,6 +262,8 @@ export const saveEcosystemIfNotExist = async (
     rawGraph: graph,
     metadata,
     state: 'processing_graph',
+    deadline: deadline ?? null,
+    refundAccountId: (refundAccountId as AccountId) ?? null,
   });
 
   await repository.save(entity);

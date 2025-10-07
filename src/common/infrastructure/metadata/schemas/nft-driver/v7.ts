@@ -8,6 +8,10 @@ import {subListSplitReceiverSchema} from '../immutable-splits-driver/v1';
 import {dripListSplitReceiverSchema} from './v2';
 import {repoSubAccountDriverSplitReceiverSchema} from '../common/repoSubAccountDriverSplitReceiverSchema';
 import {emojiAvatarSchema} from '../repo-driver/v4';
+import {
+  deadlineSplitReceiverSchema,
+  orcidSplitReceiverSchema,
+} from '../repo-driver/v6';
 
 const base = nftDriverAccountMetadataSchemaV5
   .omit({
@@ -15,8 +19,7 @@ const base = nftDriverAccountMetadataSchemaV5
     projects: true,
   })
   .extend({
-    isDripList: z.undefined().optional(),
-    projects: z.undefined().optional(),
+    allowExternalDonations: z.boolean().optional(),
   });
 
 const ecosystemVariant = base.extend({
@@ -25,13 +28,14 @@ const ecosystemVariant = base.extend({
     z.union([
       repoSubAccountDriverSplitReceiverSchema,
       subListSplitReceiverSchema,
+      deadlineSplitReceiverSchema, // New in v7
     ]),
   ),
   color: z.string(),
   avatar: emojiAvatarSchema,
 });
 
-export const dripListVariant = base.extend({
+const dripListVariant = base.extend({
   type: z.literal('dripList'),
   recipients: z.array(
     z.union([
@@ -39,11 +43,13 @@ export const dripListVariant = base.extend({
       subListSplitReceiverSchema,
       addressDriverSplitReceiverSchema,
       dripListSplitReceiverSchema,
+      deadlineSplitReceiverSchema, // New in v7
+      orcidSplitReceiverSchema, // New in v7
     ]),
   ),
 });
 
-export const nftDriverAccountMetadataSchemaV6 = z.discriminatedUnion('type', [
+export const nftDriverAccountMetadataSchemaV7 = z.discriminatedUnion('type', [
   ecosystemVariant,
   dripListVariant,
 ]);

@@ -18,7 +18,8 @@ export const handleDeployEcosystem = async ({
 }: DeployEcosystemRequestDto) => {
   assertIsUUID(id);
 
-  const {chainId, ownerAddress, state} = await getEcosystemById(id);
+  const {chainId, ownerAddress, state, deadline, refundAccountId} =
+    await getEcosystemById(id);
 
   if (state !== 'pending_deployment') {
     throw new BadRequestError(
@@ -30,6 +31,8 @@ export const handleDeployEcosystem = async ({
   const ecosystemMainAccount = await convertToEcosystemMainAccount(
     nodes,
     chainId,
+    deadline,
+    refundAccountId,
   );
 
   await transitionEcosystemState(id, 'DEPLOYMENT_STARTED');

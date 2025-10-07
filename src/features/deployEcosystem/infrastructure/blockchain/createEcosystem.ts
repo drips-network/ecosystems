@@ -8,7 +8,11 @@ import {populateEcosystemMainAccountCreationTxs} from './populateTransactions';
 import {pinEcosystemMetadata} from '../ipfs/metadata';
 import unreachable from '../../../../common/application/unreachable';
 import {NormalizedEcosystemMainAccount} from '../../application/convertToEcosystemMainAccount';
-import {ProjectReceiver, SubListReceiver} from '../../application/types';
+import {
+  ProjectReceiver,
+  SubListReceiver,
+  DeadlineReceiver,
+} from '../../application/types';
 
 type Params = {
   chainId: ChainId;
@@ -37,10 +41,9 @@ export default async function createEcosystem({
     );
   }
 
-  const receivers = [...ecosystemMainAccount.projectReceivers] as (
-    | ProjectReceiver
-    | SubListReceiver
-  )[];
+  const receivers: (ProjectReceiver | DeadlineReceiver | SubListReceiver)[] = [
+    ...ecosystemMainAccount.projectReceivers,
+  ];
   if (successfulSubListCreationResults.length) {
     receivers.push(
       ...successfulSubListCreationResults.flatMap(

@@ -47,16 +47,56 @@ const emojiAvatarSchema = z.object({
   emoji: z.string(),
 });
 
-export const newEcosystemRequestSchema = z.object({
-  graph: graphSchema,
-  metadata: metadataSchema,
-  ownerAddress: addressSchema,
-  name: z.string().min(1).max(100),
-  description: z.string().min(1).max(1000).optional(),
-  chainId: z.enum(Object.values(SUPPORTED_CHAIN_IDS) as [ChainId]),
-  avatar: emojiAvatarSchema,
-  color: hexColorSchema,
-});
+const deadlineSchema = z.coerce
+  .date()
+  .refine(date => !isNaN(date.getTime()), 'Invalid date')
+  .refine(date => date > new Date(), 'Deadline must be in the future')
+  .refine(
+    date => date < new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+    'Deadline cannot be more than 1 year in the future',
+  );
+
+export const newEcosystemRequestSchema = z
+  .object({
+    graph: graphSchema,
+    metadata: metadataSchema,
+    ownerAddress: addressSchema,
+    name: z.string().min(1).max(100),
+    description: z.string().min(1).max(1000).optional(),
+    chainId: z.enum(Object.values(SUPPORTED_CHAIN_IDS) as [ChainId]),
+    avatar: emojiAvatarSchema,
+    color: hexColorSchema,
+    deadline: deadlineSchema.optional(),
+    refundAccountId: z.string().optional(),
+  })
+  .superRefine(
+    (
+      data: {deadline?: Date; refundAccountId?: string},
+      ctx: z.RefinementCtx,
+    ): void => {
+      const hasDeadline: boolean = data.deadline !== undefined;
+      const hasRefundAccountId: boolean = data.refundAccountId !== undefined;
+
+      if (hasDeadline === hasRefundAccountId) {
+        return;
+      }
+
+      const sharedMessage =
+        'Both deadline and refundAccountId must be provided together, or neither.';
+
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: sharedMessage,
+        path: ['deadline'],
+      });
+
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: sharedMessage,
+        path: ['refundAccountId'],
+      });
+    },
+  );
 
 export type NodeDto = z.infer<typeof nodeSchema>;
 export type EdgeDto = z.infer<typeof edgeSchema>;
