@@ -1,19 +1,24 @@
 import {Node} from '../../../common/domain/entities.ts/Node';
-import {ProjectReceiver} from './types';
+import {ProjectReceiver, DeadlineReceiver} from './types';
 import {logger} from '../../../common/infrastructure/logger';
 import unreachable from '../../../common/application/unreachable';
 import {AccountId, ChainId, OxString} from '../../../common/domain/types';
 import calculateRandomSalt from '../infrastructure/blockchain/calculateRandomSalt';
 import {executeNftDriverReadMethod} from '../../../common/infrastructure/contracts/nftDriver/nftDriver';
 import getWallet from '../../../common/infrastructure/contracts/getWallet';
+import {executeRepoDeadlineDriverReadMethod} from '../../../common/infrastructure/contracts/repoDeadlineDriver/repoDeadlineDriver';
+import {executeRepoSubAccountDriverReadMethod} from '../../../common/infrastructure/contracts/repoSubAccountDriver/repoSubAccountDriver';
+import {toBigInt} from 'ethers';
+
+type Receiver = ProjectReceiver | DeadlineReceiver; // In the future, we may allow `SubListReceiver` types as well.
 
 type EcosystemMainAccount = {
-  projectReceivers: ProjectReceiver[];
-  subListReceivers: ProjectReceiver[][]; // In the future, we may allow `SubListReceiver` types as well.
+  projectReceivers: Receiver[];
+  subListReceivers: Receiver[][];
 };
 
 type NormalizedSubList = {
-  receivers: ProjectReceiver[];
+  receivers: Receiver[];
   normalizedWeight: number;
 };
 
@@ -21,7 +26,7 @@ export type NormalizedEcosystemMainAccount = {
   salt: bigint;
   accountId: AccountId;
   subLists: NormalizedSubList[];
-  projectReceivers: ProjectReceiver[];
+  projectReceivers: (ProjectReceiver | DeadlineReceiver)[];
 };
 
 const MAX_SPLITS_RECEIVERS = 2; // Hardcoded in Drips contracts.
@@ -106,6 +111,8 @@ function normalizeWeights(
 export default async function convertToEcosystemMainAccount(
   nodes: Node[],
   chainId: ChainId,
+  deadline: Date | null,
+  refundAccountId: AccountId | null,
 ): Promise<NormalizedEcosystemMainAccount> {
   if (nodes.length > MAX_NUMBER_OF_NODES) {
     throw new Error(
@@ -132,7 +139,9 @@ export default async function convertToEcosystemMainAccount(
     return normalizeEcosystemMainAccount(
       {
         projectReceivers: await Promise.all(
-          allNodesExceptRoot.map(node => mapToProjectReceiver(node)),
+          allNodesExceptRoot.map(node =>
+            mapToReceiver(node, chainId, deadline, refundAccountId),
+          ),
         ),
         subListReceivers: [],
       },
@@ -155,7 +164,7 @@ export default async function convertToEcosystemMainAccount(
   const rawReceiversCount = MAX_SPLITS_RECEIVERS - subListsNeeded;
   const subListsCount = totalIDs - rawReceiversCount;
 
-  const subListReceivers: ProjectReceiver[][] = [];
+  const subListReceivers: Receiver[][] = [];
   let processedAccounts = 0;
   while (processedAccounts < subListsCount) {
     const start = processedAccounts;
@@ -166,7 +175,11 @@ export default async function convertToEcosystemMainAccount(
     );
     if (subListSlice.length > 0) {
       subListReceivers.push(
-        await Promise.all(subListSlice.map(node => mapToProjectReceiver(node))),
+        await Promise.all(
+          subListSlice.map(node =>
+            mapToReceiver(node, chainId, deadline, refundAccountId),
+          ),
+        ),
       );
     }
     processedAccounts += subListSlice.length;
@@ -177,7 +190,7 @@ export default async function convertToEcosystemMainAccount(
       projectReceivers: await Promise.all(
         allNodesExceptRoot
           .slice(0, rawReceiversCount)
-          .map(node => mapToProjectReceiver(node)),
+          .map(node => mapToReceiver(node, chainId, deadline, refundAccountId)),
       ),
       subListReceivers,
     },
@@ -185,14 +198,17 @@ export default async function convertToEcosystemMainAccount(
   );
 }
 
-async function mapToProjectReceiver(
+async function mapToReceiver(
   node: Node & {projectAccountId: string; url: string},
-): Promise<ProjectReceiver> {
+  chainId: ChainId,
+  deadline: Date | null,
+  refundAccountId: AccountId | null,
+): Promise<Receiver> {
   const [ownerName, repoName] = node.projectName.includes('/')
     ? node.projectName.split('/')
     : unreachable('Invalid project name format.');
 
-  return {
+  const projectReceiver: ProjectReceiver = {
     accountId: node.projectAccountId,
     weight: node.absoluteWeight,
     type: 'repoSubAccountDriver',
@@ -203,6 +219,57 @@ async function mapToProjectReceiver(
       repoName,
     },
   };
+
+  // If no deadline is configured, return the project receiver directly.
+  if (!deadline || !refundAccountId) {
+    return projectReceiver;
+  }
+
+  // Calculate the RepoDriver accountId from the RepoSubAccountDriver accountId.
+  const repoAccountId = (
+    await executeRepoSubAccountDriverReadMethod({
+      functionName: 'calcAccountId',
+      args: [toBigInt(projectReceiver.accountId)],
+      chainId,
+    })
+  ).toString() as AccountId;
+
+  // Convert deadline to Unix timestamp (seconds).
+  const deadlineTimestamp = toBigInt(Math.floor(deadline.getTime() / 1000));
+
+  // Calculate the DeadlineDriver account ID.
+  const deadlineAccountId = (
+    await executeRepoDeadlineDriverReadMethod({
+      functionName: 'calcAccountId',
+      args: [
+        toBigInt(repoAccountId),
+        toBigInt(projectReceiver.accountId),
+        toBigInt(refundAccountId),
+        Number(deadlineTimestamp),
+      ],
+      chainId,
+    })
+  ).toString() as AccountId;
+
+  // Ensure the source is GitHub for deadline receivers.
+  if (projectReceiver.source.forge !== 'github') {
+    unreachable('Deadline receivers are only supported for GitHub projects.');
+  }
+
+  const deadlineReceiver: DeadlineReceiver = {
+    type: 'deadline',
+    weight: projectReceiver.weight,
+    accountId: deadlineAccountId,
+    claimableProject: {
+      accountId: repoAccountId,
+      source: projectReceiver.source,
+    },
+    recipientAccountId: projectReceiver.accountId,
+    refundAccountId,
+    deadline,
+  };
+
+  return deadlineReceiver;
 }
 
 /**

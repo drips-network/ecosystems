@@ -11,6 +11,7 @@ import {logger} from '../../../../common/infrastructure/logger';
 import {encodeBytes32String, hexlify, toUtf8Bytes} from 'ethers';
 import {
   ProjectReceiver,
+  DeadlineReceiver,
   Receiver,
   SubListReceiver,
 } from '../../application/types';
@@ -43,12 +44,12 @@ export function keyValueToMetadata({
 export async function pinEcosystemMetadata(
   ecosystemId: UUID,
   ecosystemMainAccountId: AccountId,
-  recipients: (ProjectReceiver | SubListReceiver)[],
+  recipients: (ProjectReceiver | SubListReceiver | DeadlineReceiver)[],
 ): Promise<IpfsHash> {
   const {name, description, color, avatar} =
     await getEcosystemById(ecosystemId);
 
-  const dripListMetadata = {
+  const ecosystemMetadata = {
     driver: 'nft',
     describes: {
       driver: 'nft',
@@ -63,9 +64,7 @@ export async function pinEcosystemMetadata(
     avatar,
   } as LatestVersion<typeof nftDriverAccountMetadataParser>;
 
-  nftDriverAccountMetadataParser.parseLatest(dripListMetadata);
-
-  const ipfsHash = await pinJSON(dripListMetadata);
+  const ipfsHash = await pinJSON(ecosystemMetadata);
 
   logger.info(
     `Ecosystem Main Account '${ecosystemMainAccountId}' metadata pinned to IPFS with hash '${ipfsHash}'.`,

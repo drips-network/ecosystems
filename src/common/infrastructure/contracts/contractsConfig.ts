@@ -47,7 +47,7 @@ export const contractsConfigByChainId: Record<ChainId, ContractsConfig> = {
     IMMUTABLE_SPLITS: '0x1346abCa70e010fe8B01C2A7424dE4E83921018D',
     NATIVE_TOKEN_UNWRAPPER: '0x0288C45cA3ae6d226f3fCC45c340A13914f0FaF2',
     REPO_SUB_ACCOUNT_DRIVER: '0xe077e0D50fB60b900467F4a44DF7b49deB41097d',
-    REPO_DEADLINE_DRIVER: undefined,
+    REPO_DEADLINE_DRIVER: '0xE57A3111414E0FaB39cc6e8fDe957b1f6471cd49',
   },
   // Optimism Mainnet
   10: {
@@ -59,7 +59,7 @@ export const contractsConfigByChainId: Record<ChainId, ContractsConfig> = {
     IMMUTABLE_SPLITS: '0x96EC722e1338f08bbd469b80394eE118a0bc6753',
     NATIVE_TOKEN_UNWRAPPER: '0x64e0d60C70e9778C2E649FfBc90259C86a6Bf396',
     REPO_SUB_ACCOUNT_DRIVER: '0x925a69f6d07ee4c753df139bcc2a946e1d1ee92a',
-    REPO_DEADLINE_DRIVER: undefined,
+    REPO_DEADLINE_DRIVER: '0x0386b66e2b0106ff27ef26e84102ca78a5c0edef',
   },
   // Sepolia
   11155111: {
@@ -71,7 +71,7 @@ export const contractsConfigByChainId: Record<ChainId, ContractsConfig> = {
     IMMUTABLE_SPLITS: '0xC3C1955bb50AdA4dC8a55aBC6d4d2a39242685c1',
     NATIVE_TOKEN_UNWRAPPER: '0xf470601db8f7eebac6612a16bf15daed0f414f6a',
     REPO_SUB_ACCOUNT_DRIVER: '0x317400fd9dfdad78d53a34455d89beb8f03f90ee',
-    REPO_DEADLINE_DRIVER: undefined,
+    REPO_DEADLINE_DRIVER: '0x4e576318213e3c9b436d0758a021a485c5d8b929',
   },
   // Local testnet
   31337: {
@@ -83,7 +83,7 @@ export const contractsConfigByChainId: Record<ChainId, ContractsConfig> = {
     IMMUTABLE_SPLITS: '0x33a946e876C3bFb08636099238Db35a81dEf4b1E',
     NATIVE_TOKEN_UNWRAPPER: '0xC203cF8A0B0594fD404fe97725802bE59eF64194',
     REPO_SUB_ACCOUNT_DRIVER: '0xB8743C2bB8DF7399273aa7EE4cE8d4109Bec327F',
-    REPO_DEADLINE_DRIVER: undefined,
+    REPO_DEADLINE_DRIVER: '0xFD9Aa049A4f3dC1a2CD3355Ce52A943418Fa54e3',
   },
   // Base Sepolia
   84532: {
@@ -107,7 +107,7 @@ export const contractsConfigByChainId: Record<ChainId, ContractsConfig> = {
     IMMUTABLE_SPLITS: '0x96EC722e1338f08bbd469b80394eE118a0bc6753',
     NATIVE_TOKEN_UNWRAPPER: '0x64e0d60C70e9778C2E649FfBc90259C86a6Bf396',
     REPO_SUB_ACCOUNT_DRIVER: '0x925a69f6d07ee4c753df139bcc2a946e1d1ee92a',
-    REPO_DEADLINE_DRIVER: undefined,
+    REPO_DEADLINE_DRIVER: '0x0386b66e2b0106ff27ef26e84102ca78a5c0edef',
   },
   // Metis
   1088: {
@@ -119,6 +119,6 @@ export const contractsConfigByChainId: Record<ChainId, ContractsConfig> = {
     IMMUTABLE_SPLITS: '0x96EC722e1338f08bbd469b80394eE118a0bc6753',
     NATIVE_TOKEN_UNWRAPPER: undefined,
     REPO_SUB_ACCOUNT_DRIVER: '0x925a69f6d07ee4c753df139bcc2a946e1d1ee92a',
-    REPO_DEADLINE_DRIVER: undefined,
+    REPO_DEADLINE_DRIVER: '0x0386b66e2b0106ff27ef26e84102ca78a5c0edef',
   },
 };
