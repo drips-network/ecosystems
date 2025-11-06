@@ -5,6 +5,7 @@ import unreachable from '../../../common/application/unreachable';
 import {AccountId, ChainId, OxString} from '../../../common/domain/types';
 import calculateRandomSalt from '../infrastructure/blockchain/calculateRandomSalt';
 import {executeNftDriverReadMethod} from '../../../common/infrastructure/contracts/nftDriver/nftDriver';
+import {executeDripsReadMethod} from '../../../common/infrastructure/contracts/drips/drips';
 import getWallet from '../../../common/infrastructure/contracts/getWallet';
 
 type EcosystemMainAccount = {
@@ -287,17 +288,38 @@ Root-Level Normalization Summary:
 
   const salt = calculateRandomSalt();
   const deployerAddress = getWallet(chainId).address as OxString;
-  const dripListId = (
-    await executeNftDriverReadMethod({
-      functionName: 'calcTokenIdWithSalt',
-      args: [deployerAddress, salt],
-      chainId,
-    })
-  ).toString() as AccountId;
+  const tokenId = await executeNftDriverReadMethod({
+    functionName: 'calcTokenIdWithSalt',
+    args: [deployerAddress, salt],
+    chainId,
+  });
+
+  // Get the driver ID and offset to calculate the proper account ID
+  const driverId = await executeNftDriverReadMethod({
+    functionName: 'driverId',
+    args: [],
+    chainId,
+  });
+
+  const driverIdOffset = await executeDripsReadMethod({
+    functionName: 'DRIVER_ID_OFFSET',
+    args: [],
+    chainId,
+  });
+
+  // Calculate accountId = (driverId << DRIVER_ID_OFFSET) | tokenId
+  const accountId = ((BigInt(driverId) << BigInt(Number(driverIdOffset))) | BigInt(tokenId)).toString() as AccountId;
+
+  logger.info('Calculated ecosystem account ID', {
+    tokenId: tokenId.toString(),
+    driverId: Number(driverId),
+    driverIdOffset: Number(driverIdOffset),
+    accountId,
+  });
 
   return {
     salt,
-    accountId: dripListId,
+    accountId,
     projectReceivers: normalizedProjectReceivers,
     subLists: normalizedSubLists.map(s => ({
       receivers: s.receivers,
